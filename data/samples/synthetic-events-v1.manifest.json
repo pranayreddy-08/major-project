@@ -1,0 +1,16 @@
+{
+  "contains_real_data": false,
+  "dataset_id": "synthetic-events-v1",
+  "file": "synthetic-events-v1.csv",
+  "generator": "app.ingestion.synthetic",
+  "generator_config": {
+    "count": 120,
+    "dataset_version": "synthetic-events-v1",
+    "interval_seconds": 60,
+    "seed": 42,
+    "start": "2026-01-01T00:00:00+00:00"
+  },
+  "rows": 120,
+  "schema_version": "normalized-event-v1",
+  "sha256": "4397533a06815da9f30267aae9371516d32e0ef8679565d38fa6f3cf462c6ae6"
+}

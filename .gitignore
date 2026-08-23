@@ -22,6 +22,9 @@ htmlcov/
 *.log
 data/raw/
 data/uploads/
+data/external/
+data/processed/
+data/generated/
 
 # ML outputs and large local artifacts
 /models/

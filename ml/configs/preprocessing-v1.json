@@ -1,0 +1,27 @@
+{
+  "config_version": "preprocessing-v1",
+  "dataset_version": "synthetic-events-v1",
+  "timestamp_column": "timestamp",
+  "label_column": "label",
+  "numeric_columns": [
+    "destination_port",
+    "bytes_transferred",
+    "failed_attempts"
+  ],
+  "categorical_columns": [
+    "protocol",
+    "action",
+    "severity",
+    "event_type"
+  ],
+  "missing_values": "numeric median; categorical constant 'missing'",
+  "categorical_encoding": "one-hot with unknown categories ignored",
+  "numeric_scaling": "standard scaling fitted on training data only",
+  "split": {
+    "strategy": "chronological contiguous partitions",
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15
+  },
+  "tuning_policy": "Tune on train and validation only; test is final evaluation only."
+}

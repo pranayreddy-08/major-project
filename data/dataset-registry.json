@@ -1,0 +1,33 @@
+{
+  "registry_version": "dataset-registry-v1",
+  "datasets": [
+    {
+      "dataset_id": "synthetic-events-v1",
+      "local_path": "data/samples/synthetic-events-v1.csv",
+      "manifest": "data/samples/synthetic-events-v1.manifest.json",
+      "usage": "tracked demo and automated tests",
+      "contains_real_data": false
+    },
+    {
+      "dataset_id": "unsw-nb15-original",
+      "source": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
+      "local_path": null,
+      "usage": "candidate research benchmark; download to data/external only",
+      "contains_real_data": false
+    },
+    {
+      "dataset_id": "cic-ids2017",
+      "source": "https://www.unb.ca/cic/datasets/ids-2017.html",
+      "local_path": null,
+      "usage": "candidate research benchmark; download to data/external only",
+      "contains_real_data": false
+    },
+    {
+      "dataset_id": "cse-cic-ids2018",
+      "source": "https://www.unb.ca/cic/datasets/ids-2018.html",
+      "local_path": null,
+      "usage": "optional large research benchmark; download to data/external only",
+      "contains_real_data": false
+    }
+  ]
+}

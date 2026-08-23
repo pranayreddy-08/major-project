@@ -46,7 +46,9 @@ py -3 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -e ".\backend[dev]"
+python -m pip install -e ".\ml[dev]"
 pytest backend\tests
+pytest ml\tests
 
 Set-Location frontend
 npm ci
@@ -73,6 +75,45 @@ and pinned backend/frontend dependencies, secret-safe environment configuration,
 Docker Compose development stack, the initial SQLAlchemy database schema, and a validated common
 event contract. Backend tests, frontend compilation, and `docker compose config --quiet` are the
 foundation acceptance checks.
+
+### Data-pipeline status
+
+Phase 3 is complete. CSV, JSON/NDJSON, and syslog adapters preserve raw records while producing the
+common event schema; invalid records are isolated and SHA-256 checksums remove duplicates. The ML
+package performs missing-value handling, categorical encoding, numeric scaling, and chronological
+train/validation/test splitting without fitting on future data. A deterministic synthetic dataset,
+dataset registry, versioned preprocessing configuration, and provenance/licensing catalogue make the
+pipeline reproducible without private logs.
+
+Recreate the synthetic sample:
+
+```powershell
+python -m app.ingestion.synthetic `
+  --output data\samples\synthetic-events-v1.csv `
+  --manifest data\samples\synthetic-events-v1.manifest.json `
+  --count 120 `
+  --seed 42
+```
+
+Normalize it into separate, ignored raw and normalized outputs:
+
+```powershell
+python -m app.ingestion.cli data\samples\synthetic-events-v1.csv `
+  --format csv `
+  --log-source synthetic `
+  --raw-output data\processed\synthetic-v1.raw.jsonl `
+  --normalized-output data\processed\synthetic-v1.normalized.jsonl
+```
+
+Verify the chronological feature-preparation split:
+
+```powershell
+python -m ecti_ml.cli data\samples\synthetic-events-v1.csv `
+  --config ml\configs\preprocessing-v1.json
+```
+
+The complete workflow and governance rules are documented in `docs/data-pipeline.md` and
+`docs/datasets.md`.
 
 ## Development plan
 
