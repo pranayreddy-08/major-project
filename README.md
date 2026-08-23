@@ -13,6 +13,67 @@ Build a cybersecurity decision-support platform that collects security events, d
 - Explainability: SHAP; use LIME only where it adds value
 - Development and delivery: GitHub, Git, Docker Compose, GitHub Actions
 
+## Development setup
+
+### Run the complete stack with Docker
+
+Docker Compose starts PostgreSQL, creates the initial database tables, and runs the backend and
+frontend development servers.
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+The example environment file intentionally contains no values. Compose uses safe local defaults;
+set values in `.env` when different local credentials or ports are needed.
+
+After startup, open:
+
+- Frontend: <http://localhost:5173>
+- Backend health check: <http://localhost:8000/health>
+- Interactive API documentation: <http://localhost:8000/docs>
+
+Stop the services with `docker compose down`. The PostgreSQL data remains in a named Docker volume.
+Use `docker compose down --volumes` only when intentionally resetting all local database data.
+
+### Run services directly
+
+Install Python 3.10 or newer and Node.js 22 or newer. From the project root on Windows PowerShell:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ".\backend[dev]"
+pytest backend\tests
+
+Set-Location frontend
+npm ci
+npm run build
+Set-Location ..
+```
+
+Start PostgreSQL separately and configure `DATABASE_URL` in `.env`, then run:
+
+```powershell
+python -m app.db.init_db
+uvicorn app.main:app --app-dir backend --reload
+Set-Location frontend
+npm run dev
+```
+
+The initial architecture is documented in `docs/architecture.md`, the database entities in
+`docs/database-schema.md`, and the common event contract in `docs/event-schema.md`.
+
+### Foundation status
+
+Phase 2 is complete. The repository now includes the six planned module directories, reproducible
+and pinned backend/frontend dependencies, secret-safe environment configuration, a three-service
+Docker Compose development stack, the initial SQLAlchemy database schema, and a validated common
+event contract. Backend tests, frontend compilation, and `docker compose config --quiet` are the
+foundation acceptance checks.
+
 ## Development plan
 
 ### Phase 1 - Create and connect the GitHub repository
