@@ -48,6 +48,28 @@ flowchart LR
 The browser keeps the bearer token in memory, calls only versioned backend endpoints, and never
 connects to PostgreSQL. The server reloads account state for each token-authenticated request.
 
+## Phase 7 acceptance path
+
+```mermaid
+flowchart LR
+    Raw[Versioned raw sample logs] --> Normalize[Validate + normalize + deduplicate]
+    Normalize --> Detect[Detection findings]
+    Detect --> Correlate[Incident correlation]
+    Correlate --> Graph[Visual attack graph]
+    Detect --> Risk[Transparent risk score]
+    Correlate --> Risk
+    Risk --> Explain[Evidence + limitations]
+    Risk --> Recommend[Advisory recommendations]
+    Graph --> API[Dashboard API contract]
+    Explain --> API
+    Recommend --> Approval[Human approval pending]
+```
+
+`backend/app/acceptance.py` executes this bounded path with the versioned synthetic sample and
+records counts, response time, input hash, safety state, and pass/fail criteria. API contract tests
+exercise authenticated workflow responses; the Docker validation additionally checks the
+PostgreSQL-backed analyst endpoints used by the React dashboard.
+
 ## Service boundaries
 
 | Component | Current responsibility | Later responsibility |

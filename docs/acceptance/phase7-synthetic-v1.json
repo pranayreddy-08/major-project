@@ -1,0 +1,35 @@
+{
+  "acceptance_version": "phase7-synthetic-v1",
+  "counts": {
+    "explanations": 2,
+    "findings": 3,
+    "graph_edges": 6,
+    "graph_nodes": 4,
+    "incidents": 1,
+    "normalized_events": 3,
+    "recommendations": 5
+  },
+  "criteria": {
+    "all_sample_logs_normalized": true,
+    "attack_alert_created": true,
+    "completed_within_limit": true,
+    "correlated_incident_created": true,
+    "explanation_created": true,
+    "recommendations_are_advisory": true,
+    "risk_score_created": true,
+    "visual_attack_path_created": true
+  },
+  "evaluated_at": "2026-08-23T09:50:43.804716+00:00",
+  "human_approval": {
+    "approval_status": "pending",
+    "approved_at": null,
+    "approved_by": null,
+    "execution_permitted": false,
+    "required": true
+  },
+  "max_duration_ms": 2000,
+  "observed_duration_ms": 3.1307999743148685,
+  "passed": true,
+  "sample_sha256": "7a682cfc392b2c23eaac7b29ef442bd5495152164b7e168e4b93dbd054de8e74",
+  "workflow_contract_version": "phase5-v1"
+}

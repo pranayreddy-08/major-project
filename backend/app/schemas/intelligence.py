@@ -4,13 +4,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.schemas.events import NormalizedEventCreate
+from app.schemas.events import MAX_EVENT_BATCH, NormalizedEventCreate
 
 
 class CorrelationBuildRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    events: list[NormalizedEventCreate] = Field(min_length=1)
+    events: list[NormalizedEventCreate] = Field(min_length=1, max_length=MAX_EVENT_BATCH)
     window_minutes: int = Field(default=15, ge=1, le=1440)
 
 
@@ -55,7 +55,7 @@ class AttackGraph(BaseModel):
 class AttackGraphBuildRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    events: list[NormalizedEventCreate] = Field(min_length=1)
+    events: list[NormalizedEventCreate] = Field(min_length=1, max_length=MAX_EVENT_BATCH)
 
 
 class EvidencePath(BaseModel):

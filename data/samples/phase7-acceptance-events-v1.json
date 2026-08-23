@@ -1,0 +1,39 @@
+{
+  "events": [
+    {
+      "event_time": "2026-01-01 00:00:00",
+      "src_ip": "192.0.2.44",
+      "dst_ip": "198.51.100.20",
+      "username": "demo-user",
+      "hostname": "demo-host",
+      "proto": "TCP",
+      "outcome": "denied",
+      "level": "high",
+      "type": "authentication_failure",
+      "anomaly_score": 0.82
+    },
+    {
+      "event_time": "2026-01-01T00:04:00Z",
+      "src_ip": "192.0.2.44",
+      "dst_ip": "198.51.100.20",
+      "username": "demo-user",
+      "hostname": "demo-host",
+      "proto": "TCP",
+      "outcome": "denied",
+      "level": "critical",
+      "type": "credential_attack",
+      "anomaly_score": 0.94
+    },
+    {
+      "event_time": 1767227400000,
+      "src_ip": "203.0.113.8",
+      "dst_ip": "198.51.100.30",
+      "username": "service-user",
+      "hostname": "quiet-host",
+      "proto": "TCP",
+      "outcome": "allowed",
+      "level": "low",
+      "type": "heartbeat"
+    }
+  ]
+}

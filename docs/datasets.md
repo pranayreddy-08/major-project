@@ -59,6 +59,12 @@ The adjacent manifest records its generator, seed, row count, schema version, an
 Any change to generation logic or schema requires a new dataset ID and a new preprocessing config;
 never silently replace an existing version.
 
+`phase7-acceptance-events-v1` is a separate three-record raw JSON fixture that exercises field
+aliases, ISO/naive/epoch-millisecond timestamps, normalization, correlation, explanation, and graph
+construction. It uses only fabricated identities and RFC 5737 addresses. Its input checksum and
+acceptance result are recorded in `docs/acceptance/phase7-synthetic-v1.json`; changing the records
+requires a new fixture ID and acceptance record.
+
 ## Experiment recording policy
 
 Every experiment must record:

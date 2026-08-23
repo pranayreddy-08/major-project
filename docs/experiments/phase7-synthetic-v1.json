@@ -1,0 +1,202 @@
+{
+  "dataset": {
+    "rows": 120,
+    "sha256": "4397533a06815da9f30267aae9371516d32e0ef8679565d38fa6f3cf462c6ae6",
+    "version": "synthetic-events-v1"
+  },
+  "environment": {
+    "device": "cpu",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "python": "3.10.0",
+    "scikit_learn": "1.7.2",
+    "shap": "0.48.0",
+    "torch": "2.7.1+cpu"
+  },
+  "example_shap_explanation": {
+    "base_value": -1.9578120010891675,
+    "contributions": [
+      {
+        "feature": "event_type_network_connection",
+        "shap_value": -0.4275423418508401,
+        "value": 1.0
+      },
+      {
+        "feature": "severity_informational",
+        "shap_value": -0.4198718173373708,
+        "value": 1.0
+      },
+      {
+        "feature": "failed_attempts",
+        "shap_value": -0.3368965103953133,
+        "value": -0.3319648784258631
+      },
+      {
+        "feature": "action_allowed",
+        "shap_value": -0.2911595118217959,
+        "value": 1.0
+      },
+      {
+        "feature": "event_type_authentication_success",
+        "shap_value": 0.26885363813891844,
+        "value": 0.0
+      },
+      {
+        "feature": "severity_low",
+        "shap_value": 0.2319820752211662,
+        "value": 0.0
+      },
+      {
+        "feature": "destination_port",
+        "shap_value": 0.14353775483016953,
+        "value": -0.46943154172131646
+      },
+      {
+        "feature": "action_blocked",
+        "shap_value": -0.09937638963746431,
+        "value": 0.0
+      }
+    ],
+    "limitations": "SHAP describes this model's behavior relative to the training background; it does not establish causality or guarantee correctness.",
+    "method": "shap-linear",
+    "predicted_probability": 0.04335213201505857
+  },
+  "experiment_version": "phase7-evaluation-v1",
+  "features": [
+    "destination_port",
+    "bytes_transferred",
+    "failed_attempts",
+    "protocol_tcp",
+    "protocol_udp",
+    "action_allowed",
+    "action_blocked",
+    "action_denied",
+    "severity_critical",
+    "severity_high",
+    "severity_informational",
+    "severity_low",
+    "event_type_authentication_failure",
+    "event_type_authentication_success",
+    "event_type_network_connection",
+    "event_type_port_scan"
+  ],
+  "limitations": [
+    "The synthetic dataset is small and label patterns are intentionally simple.",
+    "These metrics validate the pipeline and must not be presented as real-world efficacy.",
+    "Graph evidence is correlational and does not establish causality."
+  ],
+  "models": {
+    "graphsage": {
+      "epochs_trained": 150,
+      "test": {
+        "f1": 0.8,
+        "false_negative": 1,
+        "false_positive": 0,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.044880001223646104,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.7777777777777778,
+        "samples": 18,
+        "true_negative": 15,
+        "true_positive": 2
+      },
+      "validation": {
+        "f1": 1.0,
+        "false_negative": 0,
+        "false_positive": 0,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.044880001223646104,
+        "precision": 1.0,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "samples": 18,
+        "true_negative": 14,
+        "true_positive": 4
+      }
+    },
+    "logistic_regression": {
+      "test": {
+        "f1": 0.8,
+        "false_negative": 1,
+        "false_positive": 0,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.06880000000819564,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.8,
+        "samples": 18,
+        "true_negative": 15,
+        "true_positive": 2
+      },
+      "validation": {
+        "f1": 1.0,
+        "false_negative": 0,
+        "false_positive": 0,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.13340002624318004,
+        "precision": 1.0,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "samples": 18,
+        "true_negative": 14,
+        "true_positive": 4
+      }
+    }
+  },
+  "observed_failure_cases": {
+    "graphsage": [
+      {
+        "event_type": "port_scan",
+        "expected_label": "attack",
+        "predicted_label": "benign",
+        "probability": 6.61002150081913e-06,
+        "row_index": 107,
+        "source_ip": "192.0.2.28",
+        "timestamp": "2026-01-01T01:47:00+00:00"
+      }
+    ],
+    "logistic_regression": [
+      {
+        "event_type": "port_scan",
+        "expected_label": "attack",
+        "predicted_label": "benign",
+        "probability": 0.02761069430339695,
+        "row_index": 107,
+        "source_ip": "192.0.2.28",
+        "timestamp": "2026-01-01T01:47:00+00:00"
+      }
+    ]
+  },
+  "parameters": {
+    "correlation_window_minutes": 15,
+    "dataset_version": "synthetic-events-v1",
+    "decision_threshold": 0.5,
+    "experiment_version": "phase7-evaluation-v1",
+    "graphsage": {
+      "aggregation": "causal mean over prior events sharing IP, user, or host",
+      "hidden_size": 32,
+      "learning_rate": 0.01,
+      "max_epochs": 150,
+      "patience": 20,
+      "weight_decay": 0.0001
+    },
+    "logistic_regression": {
+      "class_weight": "balanced",
+      "max_iter": 1000
+    },
+    "positive_label": "attack",
+    "random_state": 42,
+    "selection_policy": "Use validation metrics for model development; report test once without tuning."
+  },
+  "preprocessing_version": "preprocessing-v1",
+  "split_rows": {
+    "test": 18,
+    "train": 84,
+    "validation": 18
+  },
+  "test_comparison": {
+    "graphsage_minus_logistic_f1": 0.0,
+    "graphsage_minus_logistic_roc_auc": -0.022222222222222254
+  }
+}

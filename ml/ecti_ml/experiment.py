@@ -21,6 +21,35 @@ def _load_json(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _observed_failure_cases(
+    frame: pd.DataFrame,
+    labels: np.ndarray,
+    probabilities: np.ndarray,
+    *,
+    test_offset: int,
+    positive_label: str,
+    threshold: float,
+) -> list[dict[str, object]]:
+    expected = (np.asarray(labels).astype(str) == positive_label).astype(int)
+    predicted = (np.asarray(probabilities) >= threshold).astype(int)
+    failures: list[dict[str, object]] = []
+    for position in np.flatnonzero(expected != predicted):
+        row_index = test_offset + int(position)
+        row = frame.iloc[row_index]
+        failures.append(
+            {
+                "row_index": row_index,
+                "timestamp": pd.Timestamp(row["timestamp"]).isoformat(),
+                "event_type": str(row.get("event_type", "unknown")),
+                "source_ip": str(row.get("source_ip", "unknown")),
+                "expected_label": positive_label if expected[position] else "benign",
+                "predicted_label": positive_label if predicted[position] else "benign",
+                "probability": float(probabilities[position]),
+            }
+        )
+    return failures
+
+
 def run_experiment(
     dataset_path: Path,
     preprocessing_path: Path,
@@ -38,10 +67,12 @@ def run_experiment(
     prepared = prepare_frame(frame, preprocessing_config)
     positive_label = str(experiment_config["positive_label"])
     random_state = int(experiment_config["random_state"])
+    decision_threshold = float(experiment_config["decision_threshold"])
     baseline = train_logistic_baseline(
         prepared,
         positive_label=positive_label,
         random_state=random_state,
+        decision_threshold=decision_threshold,
     )
     gnn_config = experiment_config["graphsage"]
     if not isinstance(gnn_config, dict):
@@ -57,6 +88,7 @@ def run_experiment(
         max_epochs=int(gnn_config["max_epochs"]),
         patience=int(gnn_config["patience"]),
         random_state=random_state,
+        decision_threshold=decision_threshold,
     )
     explanation = explain_logistic_prediction(
         baseline.model,
@@ -64,6 +96,7 @@ def run_experiment(
         prepared.test.features[0],
         prepared.feature_names,
     )
+    test_offset = len(prepared.train.labels) + len(prepared.validation.labels)
 
     return {
         "experiment_version": experiment_config["experiment_version"],
@@ -73,6 +106,8 @@ def run_experiment(
             "rows": len(frame),
         },
         "preprocessing_version": preprocessing_config.config_version,
+        "features": list(prepared.feature_names),
+        "parameters": experiment_config,
         "split_rows": {
             "train": len(prepared.train.labels),
             "validation": len(prepared.validation.labels),
@@ -93,6 +128,24 @@ def run_experiment(
             "graphsage_minus_logistic_f1": graphsage.test.f1 - baseline.test.f1,
             "graphsage_minus_logistic_roc_auc": (
                 graphsage.test.roc_auc - baseline.test.roc_auc
+            ),
+        },
+        "observed_failure_cases": {
+            "logistic_regression": _observed_failure_cases(
+                frame,
+                prepared.test.labels,
+                baseline.test_probabilities,
+                test_offset=test_offset,
+                positive_label=positive_label,
+                threshold=decision_threshold,
+            ),
+            "graphsage": _observed_failure_cases(
+                frame,
+                prepared.test.labels,
+                graphsage.test_probabilities,
+                test_offset=test_offset,
+                positive_label=positive_label,
+                threshold=decision_threshold,
             ),
         },
         "example_shap_explanation": explanation.as_dict(),

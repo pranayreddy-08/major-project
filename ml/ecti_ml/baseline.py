@@ -26,6 +26,7 @@ def train_logistic_baseline(
     *,
     positive_label: str = "attack",
     random_state: int = 42,
+    decision_threshold: float = 0.5,
 ) -> BaselineResult:
     model = LogisticRegression(
         class_weight="balanced",
@@ -47,11 +48,13 @@ def train_logistic_baseline(
             _labels(dataset.validation.labels, positive_label),
             validation_probabilities,
             inference_time_ms=validation_time,
+            threshold=decision_threshold,
         ),
         test=evaluate_binary(
             _labels(dataset.test.labels, positive_label),
             test_probabilities,
             inference_time_ms=test_time,
+            threshold=decision_threshold,
         ),
         validation_probabilities=validation_probabilities,
         test_probabilities=test_probabilities,

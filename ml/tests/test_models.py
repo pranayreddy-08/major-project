@@ -32,6 +32,13 @@ def test_logistic_baseline_reports_required_metrics_and_shap_evidence() -> None:
     )
 
     assert result.test.samples == 18
+    assert (
+        result.test.true_negative
+        + result.test.false_positive
+        + result.test.false_negative
+        + result.test.true_positive
+        == result.test.samples
+    )
     assert 0 <= result.test.false_positive_rate <= 1
     assert 0 <= result.test.roc_auc <= 1
     assert result.test.inference_time_ms >= 0

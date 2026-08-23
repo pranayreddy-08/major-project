@@ -13,6 +13,10 @@ class BinaryMetrics:
     false_positive_rate: float
     inference_time_ms: float
     samples: int
+    true_negative: int
+    false_positive: int
+    false_negative: int
+    true_positive: int
 
     def as_dict(self) -> dict[str, float | int]:
         return asdict(self)
@@ -35,7 +39,7 @@ def evaluate_binary(
         zero_division=0,
     )
     matrix = confusion_matrix(labels, predictions, labels=[0, 1])
-    true_negative, false_positive, _, _ = matrix.ravel()
+    true_negative, false_positive, false_negative, true_positive = matrix.ravel()
     negative_count = true_negative + false_positive
     false_positive_rate = false_positive / negative_count if negative_count else 0.0
     roc_auc = roc_auc_score(labels, probabilities) if len(set(labels.tolist())) > 1 else 0.5
@@ -47,4 +51,8 @@ def evaluate_binary(
         false_positive_rate=float(false_positive_rate),
         inference_time_ms=float(inference_time_ms),
         samples=len(labels),
+        true_negative=int(true_negative),
+        false_positive=int(false_positive),
+        false_negative=int(false_negative),
+        true_positive=int(true_positive),
     )

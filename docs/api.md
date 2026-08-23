@@ -78,4 +78,7 @@ recommendations always include `requires_human_approval=true` and `automatic_exe
 - `429`: rate limit exceeded; retry timing is returned through `Retry-After`.
 
 Unexpected request fields are rejected by the normalized event, intelligence, and workflow
-contracts. List endpoints enforce hard maximum limits to prevent unbounded responses.
+contracts. Intelligence/workflow requests accept at most 1,000 events, feedback comments accept at
+most 2,000 characters, and list endpoints enforce hard maximum limits to prevent unbounded work or
+responses. Individual malformed records are isolated by file ingestion adapters before API use;
+malformed JSON documents fail before partial processing.

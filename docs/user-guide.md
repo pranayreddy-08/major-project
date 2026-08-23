@@ -20,3 +20,7 @@ refreshing or signing out requires a new login.
 The workspace starts with deterministic synthetic data. No real organizational logs, credentials,
 or indicators are included. All response cards explicitly state that approval is required and no
 automatic execution is possible.
+
+For an academic presentation, follow the timed walkthrough in `docs/demo-script.md`. If a view does
+not load, confirm `docker compose ps`, open `/health`, sign in again to replace an expired in-memory
+token, and verify that the configured frontend origin is present in `CORS_ORIGINS`.

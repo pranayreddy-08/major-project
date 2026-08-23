@@ -9,6 +9,13 @@
       "contains_real_data": false
     },
     {
+      "dataset_id": "phase7-acceptance-events-v1",
+      "local_path": "data/samples/phase7-acceptance-events-v1.json",
+      "manifest": "docs/acceptance/phase7-synthetic-v1.json",
+      "usage": "raw-alias end-to-end acceptance and demonstration",
+      "contains_real_data": false
+    },
+    {
       "dataset_id": "unsw-nb15-original",
       "source": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
       "local_path": null,

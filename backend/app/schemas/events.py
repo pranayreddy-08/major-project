@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+MAX_EVENT_BATCH = 1000
+
 
 class EventSeverity(str, Enum):
     informational = "informational"

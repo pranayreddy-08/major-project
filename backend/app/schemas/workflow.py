@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.schemas.events import NormalizedEventCreate
+from app.schemas.events import MAX_EVENT_BATCH, NormalizedEventCreate
 from app.schemas.intelligence import (
     AttackGraph,
     CorrelatedIncident,
@@ -33,7 +33,7 @@ class DetectionFinding(BaseModel):
 class DetectionAgentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    events: list[NormalizedEventCreate] = Field(min_length=1)
+    events: list[NormalizedEventCreate] = Field(min_length=1, max_length=MAX_EVENT_BATCH)
 
 
 class DetectionAgentResult(BaseModel):
@@ -45,7 +45,7 @@ class DetectionAgentResult(BaseModel):
 class CorrelationAgentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    events: list[NormalizedEventCreate] = Field(min_length=1)
+    events: list[NormalizedEventCreate] = Field(min_length=1, max_length=MAX_EVENT_BATCH)
     findings: list[DetectionFinding]
     window_minutes: int = Field(default=15, ge=1, le=1440)
 
@@ -60,7 +60,7 @@ class CorrelationAgentResult(BaseModel):
 class RiskAgentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    events: list[NormalizedEventCreate] = Field(min_length=1)
+    events: list[NormalizedEventCreate] = Field(min_length=1, max_length=MAX_EVENT_BATCH)
     findings: list[DetectionFinding]
     incidents: list[CorrelatedIncident]
     asset_criticality: float = Field(default=0.5, ge=0, le=1)
@@ -116,7 +116,7 @@ class ExplainabilityAgentResult(BaseModel):
 class ResponseAgentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    events: list[NormalizedEventCreate] = Field(min_length=1)
+    events: list[NormalizedEventCreate] = Field(min_length=1, max_length=MAX_EVENT_BATCH)
     findings: list[DetectionFinding]
     assessments: list[RiskAssessment]
     confirmed_malicious_ips: list[IPv4Address | IPv6Address] = Field(default_factory=list)
@@ -137,7 +137,7 @@ class ResponseAgentResult(BaseModel):
 class WorkflowRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    events: list[NormalizedEventCreate] = Field(min_length=1)
+    events: list[NormalizedEventCreate] = Field(min_length=1, max_length=MAX_EVENT_BATCH)
     window_minutes: int = Field(default=15, ge=1, le=1440)
     asset_criticality: float = Field(default=0.5, ge=0, le=1)
     attack_stage: float = Field(default=0.5, ge=0, le=1)

@@ -112,6 +112,7 @@ def train_graphsage(
     max_epochs: int = 200,
     patience: int = 25,
     random_state: int = 42,
+    decision_threshold: float = 0.5,
 ) -> GNNResult:
     features = np.vstack(
         [dataset.train.features, dataset.validation.features, dataset.test.features]
@@ -191,11 +192,13 @@ def train_graphsage(
             validation_labels,
             validation_probabilities,
             inference_time_ms=inference_time * validation_share,
+            threshold=decision_threshold,
         ),
         test=evaluate_binary(
             test_labels,
             test_probabilities,
             inference_time_ms=inference_time * test_share,
+            threshold=decision_threshold,
         ),
         validation_probabilities=validation_probabilities,
         test_probabilities=test_probabilities,

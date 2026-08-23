@@ -20,6 +20,11 @@ patterns, the test set contains only 18 rows, and the results must not be descri
 real-world detection performance. Exact metrics, versions, inference timings, configuration, and an
 example SHAP explanation are recorded in `docs/experiments/phase4-synthetic-v1.json`.
 
+The Phase 7 evaluation record at `docs/experiments/phase7-synthetic-v1.json` additionally preserves
+the complete expanded feature list, all experiment parameters, TN/FP/FN/TP confusion-matrix counts,
+and each observed test failure. Both models missed the same synthetic port-scan row (row 107), which
+is retained as an explicit limitation rather than hidden behind aggregate metrics.
+
 Reproduce the experiment:
 
 ```powershell
@@ -29,6 +34,9 @@ python -m ecti_ml.experiment `
   --experiment-config ml\configs\phase4-experiment-v1.json `
   --output docs\experiments\phase4-synthetic-v1.json
 ```
+
+Use `ml/configs/phase7-evaluation-v1.json` and output
+`docs/experiments/phase7-synthetic-v1.json` to reproduce the extended Phase 7 evidence.
 
 ## Correlation and graph construction
 

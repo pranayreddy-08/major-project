@@ -52,6 +52,7 @@ pytest ml\tests
 
 Set-Location frontend
 npm ci
+npm test
 npm run build
 Set-Location ..
 ```
@@ -193,13 +194,57 @@ These defaults are for local demonstrations only and production configuration re
 Endpoint contracts are documented in `docs/api.md`, security controls and limitations in
 `docs/security.md`, and dashboard usage in `docs/user-guide.md`.
 
+### Validation status
+
+Phase 7 is complete. The automated suites now cover ingestion and normalization, intelligence
+scoring and graphs, agent handoffs, API validation and authorization, malformed/adversarial input,
+ML preprocessing and evaluation, and the React login-to-dashboard flow. A versioned acceptance
+runner takes three raw synthetic logs through normalization, alerting, correlation, risk,
+explanation, advisory response, and attack-graph construction.
+
+The recorded `phase7-synthetic-v1` run completed in 3.13 ms against a 2,000 ms local acceptance
+limit and produced three findings, one incident, two explanations, five advisory recommendations,
+four graph nodes, and six graph edges. This is a deterministic prototype check on synthetic data,
+not a production performance guarantee.
+
+Run all local checks:
+
+```powershell
+python -m pytest backend\tests
+python -m pytest ml\tests
+python -m ruff check backend ml
+Set-Location frontend
+npm test
+npm run build
+Set-Location ..
+docker compose config --quiet
+```
+
+Recreate the acceptance and experiment evidence:
+
+```powershell
+$env:PYTHONPATH='backend'
+python -m app.acceptance `
+  --sample data\samples\phase7-acceptance-events-v1.json `
+  --output docs\acceptance\phase7-synthetic-v1.json
+
+python -m ecti_ml.experiment `
+  --dataset data\samples\synthetic-events-v1.csv `
+  --preprocessing-config ml\configs\preprocessing-v1.json `
+  --experiment-config ml\configs\phase7-evaluation-v1.json `
+  --output docs\experiments\phase7-synthetic-v1.json
+```
+
+See `docs/testing.md` for the test matrix and limitations, `docs/demo-script.md` for the presentation
+walkthrough, and `docs/progress/phase7.md` for the implementation record.
+
 ## Development plan
 
 ### Phase 1 - Create and connect the GitHub repository
 
 1. Create a private GitHub repository named `explainable-cyber-threat-intelligence-platform` under your GitHub account. Add the faculty guide only if project access or review is required.
 2. Create a clear repository description, add this README, choose a Python `.gitignore`, and select an open-source licence only if the project is intended to be public.
-3. Keep `main` as the stable branch. Use feature branches for meaningful changes, then merge them only after you have tested and reviewed the changes yourself.
+3. Keep `main` stable. This solo project currently commits and pushes completed, locally validated phases directly to `main`; enable branch protection before adding collaborators.
 4. Configure your Git identity once:
 
    ```bash
@@ -227,19 +272,18 @@ Endpoint contracts are documented in `docs/api.md`, security controls and limita
    cd explainable-cyber-threat-intelligence-platform
    ```
 
-7. For every new task, create a focused branch, make small commits, push it, and open a pull request:
+7. For the current solo direct-to-main workflow, validate first, then commit and push:
 
    ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b feature/data-ingestion
+   git switch main
+   git pull --ff-only origin main
    # make and test changes
    git add .
-   git commit -m "Add log ingestion skeleton"
-   git push -u origin feature/data-ingestion
+   git commit -m "Complete project phase"
+   git push origin main
    ```
 
-   Suggested branch prefixes: `feature/`, `fix/`, `docs/`, `experiment/`, and `chore/`.
+   Use a feature branch and pull request when collaboration or repository policy requires review.
 
 ### Phase 2 - Establish the project foundation
 
@@ -345,7 +389,7 @@ Define an API contract and test data for each agent before integrating the full 
 ## Solo working agreement
 
 - Use GitHub Issues to divide your work into small tasks with clear acceptance criteria.
-- Link each pull request to its issue and include screenshots/API examples when relevant.
-- Pull from `main` before starting work and resolve merge conflicts on the feature branch.
+- Link commits (and pull requests when used) to issues and include screenshots/API examples when relevant.
+- Pull from `main` before starting work; do not push until the complete validation set passes.
 - Review your code for correctness, security, tests, and documentation - not only whether it runs locally.
 - Record decisions, blockers, and model results in the repository so the final report and presentation remain easy to prepare.
