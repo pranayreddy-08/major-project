@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-from fastapi.testclient import TestClient
-
 from app.agents import (
     CorrelationAgent,
     DetectionAgent,
@@ -11,7 +9,6 @@ from app.agents import (
     RiskAgent,
     WorkflowCoordinator,
 )
-from app.main import app
 from app.schemas.intelligence import AttackGraph
 from app.schemas.workflow import (
     CorrelationAgentRequest,
@@ -23,9 +20,6 @@ from app.schemas.workflow import (
 )
 
 FIXTURE = Path(__file__).parent / "fixtures" / "phase5-workflow-v1.json"
-client = TestClient(app)
-
-
 def workflow_request() -> WorkflowRequest:
     return WorkflowRequest.model_validate(json.loads(FIXTURE.read_text(encoding="utf-8")))
 
@@ -187,15 +181,17 @@ def test_late_stage_failures_preserve_prior_analysis() -> None:
     assert response_failure.response is None
 
 
-def test_workflow_and_component_apis_expose_the_phase5_contracts() -> None:
+def test_workflow_and_component_apis_expose_the_phase5_contracts(
+    authenticated_client,
+) -> None:
     payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
-    detection_response = client.post(
+    detection_response = authenticated_client.post(
         "/api/v1/agents/detection/run", json={"events": payload["events"]}
     )
     assert detection_response.status_code == 200
     assert detection_response.json()["contract_version"] == "phase5-v1"
 
-    workflow_response = client.post("/api/v1/workflows/analyze", json=payload)
+    workflow_response = authenticated_client.post("/api/v1/workflows/analyze", json=payload)
     assert workflow_response.status_code == 200
     body = workflow_response.json()
     assert body["status"] == "completed"

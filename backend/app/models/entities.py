@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     DateTime,
     Enum,
     Float,
@@ -50,8 +51,41 @@ class RunStatus(str, enum.Enum):
     failed = "failed"
 
 
+class UserRole(str, enum.Enum):
+    analyst = "analyst"
+    administrator = "administrator"
+
+
 def enum_column(enum_type: type[enum.Enum], name: str) -> Enum:
     return Enum(enum_type, name=name, native_enum=False, validate_strings=True)
+
+
+class UserAccount(TimestampMixin, Base):
+    __tablename__ = "user_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(500), nullable=False)
+    role: Mapped[UserRole] = mapped_column(
+        enum_column(UserRole, "user_role"), nullable=False, index=True
+    )
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    actor_username: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    resource_id: Mapped[str | None] = mapped_column(String(255), index=True)
+    detail: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    ip_address: Mapped[str | None] = mapped_column(String(45))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
 
 
 class AssetHost(TimestampMixin, Base):

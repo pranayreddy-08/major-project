@@ -25,6 +25,14 @@ services:
       APP_ENVIRONMENT: "${APP_ENVIRONMENT:-development}"
       DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-ecti}:${POSTGRES_PASSWORD:-ecti}@postgres:5432/${POSTGRES_DB:-ecti}"
       CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:5173}"
+      JWT_SECRET: "${JWT_SECRET:-development-only-change-this-jwt-secret}"
+      JWT_ISSUER: "${JWT_ISSUER:-ecti-platform}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-ecti-dashboard}"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "${ACCESS_TOKEN_EXPIRE_MINUTES:-30}"
+      RATE_LIMIT_PER_MINUTE: "${RATE_LIMIT_PER_MINUTE:-120}"
+      LOGIN_RATE_LIMIT_PER_MINUTE: "${LOGIN_RATE_LIMIT_PER_MINUTE:-10}"
+      DEMO_ANALYST_PASSWORD: "${DEMO_ANALYST_PASSWORD:-analyst-demo-only}"
+      DEMO_ADMIN_PASSWORD: "${DEMO_ADMIN_PASSWORD:-admin-demo-only}"
     command: >-
       sh -c "python -m app.db.init_db &&
       uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"

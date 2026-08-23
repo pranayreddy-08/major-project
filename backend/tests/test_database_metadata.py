@@ -16,6 +16,8 @@ def test_initial_schema_contains_required_tables() -> None:
         "model_runs",
         "explanations",
         "analyst_feedback",
+        "user_accounts",
+        "audit_logs",
     }
 
     assert expected_tables == set(Base.metadata.tables)

@@ -1,6 +1,6 @@
 # Initial database schema
 
-The SQLAlchemy metadata in `backend/app/models/entities.py` is the source of truth for the Phase 2
+The SQLAlchemy metadata in `backend/app/models/entities.py` is the source of truth for the current
 schema. During local development, the backend container creates missing tables before starting the
 API. Formal versioned migrations will replace `create_all` before deployment.
 
@@ -17,6 +17,8 @@ API. Formal versioned migrations will replace `create_all` before deployment.
 | `model_runs` | Model version, parameters, dataset version, metrics, and run status |
 | `explanations` | Analyst-readable evidence associated with alerts |
 | `analyst_feedback` | Analyst verdicts and comments for alerts/incidents |
+| `user_accounts` | Argon2-hashed local accounts, active state, and analyst/administrator role |
+| `audit_logs` | Durable security-sensitive action history and request-origin metadata |
 
 UUIDs are used for primary keys. Event time and ingestion time are stored separately, and all
 application timestamps must include a timezone. Flexible source-specific details are stored in JSON

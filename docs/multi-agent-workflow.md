@@ -85,9 +85,10 @@ the same ID while execution timestamps remain truthful.
 | Explainability fails | Preserve detection/risk results and continue response recommendations |
 | Response fails | Return prior analysis with partial-failure status and no recommendations |
 
-The audit trail is part of the API response and is therefore testable, but it is not yet a durable
-database audit log. Durable workflow persistence, authentication, and analyst approval endpoints
-belong to Phase 6.
+The per-agent handoff audit trail remains embedded in each workflow response. Phase 6 adds durable
+PostgreSQL audit rows for authenticated platform actions (login, ingestion, analysis, and feedback)
+and can persist workflow events/alerts/explanations. Handoff-level archival is still separate from
+the durable security-action log.
 
 ## Human-control guarantee
 

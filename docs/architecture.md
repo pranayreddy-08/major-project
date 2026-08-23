@@ -4,8 +4,8 @@ The Phase 2 development environment has three services managed by Docker Compose
 
 ```mermaid
 flowchart LR
-    Browser[Browser] -->|HTTP :5173| Frontend[React + TypeScript]
-    Frontend -->|API :8000| Backend[FastAPI]
+    Browser[Analyst browser] -->|HTTP :5173| Frontend[React + TypeScript + Cytoscape]
+    Frontend -->|JWT API :8000| Backend[FastAPI]
     Backend -->|SQL :5432| Database[(PostgreSQL)]
 ```
 
@@ -32,11 +32,27 @@ flowchart LR
 Every arrow is a validated `phase5-v1` Pydantic handoff. The coordinator returns ordered audit
 digests and keeps the approval gate pending; no response component has an execution capability.
 
+## Authentication and analyst surface
+
+```mermaid
+flowchart LR
+    Login[OAuth2 password form] --> Auth[Argon2 verification]
+    Auth --> Token[Signed expiring JWT]
+    Token --> RBAC{Database role}
+    RBAC -->|Analyst| Dashboard[Dashboard and analysis APIs]
+    RBAC -->|Administrator| Audit[Audit-log API]
+    Dashboard --> Store[(PostgreSQL records)]
+    Audit --> Store
+```
+
+The browser keeps the bearer token in memory, calls only versioned backend endpoints, and never
+connects to PostgreSQL. The server reloads account state for each token-authenticated request.
+
 ## Service boundaries
 
 | Component | Current responsibility | Later responsibility |
 | --- | --- | --- |
-| Frontend | Development landing page | Analyst dashboard and attack graph |
-| Backend | Health, intelligence APIs, five bounded agents, coordinator | Persistent authenticated platform APIs |
-| PostgreSQL | Initial platform schema | Event, alert, incident, and graph persistence |
+| Frontend | Authenticated analyst dashboard and interactive attack graph | Additional accessibility and operational views |
+| Backend | Auth, RBAC, rate limiting, platform APIs, agents, audit logging | External identity and deployment integrations |
+| PostgreSQL | Users, events, alerts, incidents, graphs, explanations, feedback, audits | Migration-managed production persistence |
 | ML | Preprocessing, Logistic Regression, SHAP, causal GraphSAGE | Versioned model artifacts and additional training |

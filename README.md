@@ -158,14 +158,40 @@ $body = Get-Content backend\tests\fixtures\phase5-workflow-v1.json -Raw
 Invoke-RestMethod `
   -Uri http://localhost:8000/api/v1/workflows/analyze `
   -Method Post `
+  -Headers $headers `
   -ContentType application/json `
   -Body $body
 ```
+
+`$headers` contains the authenticated bearer header created in the Phase 6 API example.
 
 The workflow never executes a mitigation. Its approval state is always pending, execution remains
 disabled, and each response recommendation requires a human analyst. Component contracts, failure
 behavior, API paths, test data, audit limitations, and the workflow diagram are documented in
 `docs/multi-agent-workflow.md`.
+
+### Analyst platform status
+
+Phase 6 is complete. The React dashboard now provides authenticated overview, alert queue, incident
+timeline, interactive Cytoscape attack graph, explainability, response recommendations, feedback,
+and administrator audit views. The FastAPI platform endpoints persist synthetic events, alerts,
+incidents, graphs, explanations, feedback, users, and audit records in PostgreSQL.
+
+Security controls include Argon2id password hashing, signed 30-minute JWT bearer tokens, database-
+backed analyst/administrator roles, strict claim validation, CORS allowlisting, bounded inputs,
+rate limiting, and durable action logs. All analysis and recommendations remain decision support;
+there is still no automatic execution endpoint.
+
+Start the stack and open <http://localhost:5173>. The local synthetic-demo login is:
+
+```text
+username: analyst
+password: analyst-demo-only
+```
+
+These defaults are for local demonstrations only and production configuration rejects them.
+Endpoint contracts are documented in `docs/api.md`, security controls and limitations in
+`docs/security.md`, and dashboard usage in `docs/user-guide.md`.
 
 ## Development plan
 

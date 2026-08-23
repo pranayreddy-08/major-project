@@ -1,17 +1,13 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi.testclient import TestClient
 
 from app.intelligence.correlation import correlate_events
 from app.intelligence.graph import build_attack_graph, explain_graph_node
 from app.intelligence.response import recommend_actions
 from app.intelligence.risk import calculate_risk
-from app.main import app
 from app.schemas.events import EventSeverity, NormalizedEventCreate
 from app.schemas.intelligence import ResponseContext, RiskInput
-
-client = TestClient(app)
 
 
 def event(
@@ -129,15 +125,17 @@ def test_response_catalog_never_auto_executes() -> None:
     assert not any(item.automatic_execution for item in recommendations)
 
 
-def test_intelligence_api_exposes_graph_risk_and_recommendations() -> None:
+def test_intelligence_api_exposes_graph_risk_and_recommendations(
+    authenticated_client,
+) -> None:
     payload = [item.model_dump(mode="json") for item in (event(0), event(1))]
-    graph_response = client.post(
+    graph_response = authenticated_client.post(
         "/api/v1/intelligence/attack-graphs/build", json={"events": payload}
     )
     assert graph_response.status_code == 200
     assert graph_response.json()["nodes"]
 
-    risk_response = client.post(
+    risk_response = authenticated_client.post(
         "/api/v1/intelligence/risk/score",
         json={
             "threat_confidence": 1,
@@ -151,7 +149,7 @@ def test_intelligence_api_exposes_graph_risk_and_recommendations() -> None:
     assert risk_response.status_code == 200
     assert risk_response.json()["score"] == pytest.approx(100)
 
-    recommendation_response = client.post(
+    recommendation_response = authenticated_client.post(
         "/api/v1/intelligence/recommendations",
         json={
             "risk_score": 20,

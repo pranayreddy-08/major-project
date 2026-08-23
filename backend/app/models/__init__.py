@@ -4,18 +4,22 @@ from app.models.entities import (
     AssetHost,
     AttackGraphEdge,
     AttackGraphNode,
+    AuditLog,
     Explanation,
     Incident,
     IndicatorOfCompromise,
     ModelRun,
     NormalizedEvent,
     RawEvent,
+    UserAccount,
+    UserRole,
 )
 
 __all__ = [
     "Alert",
     "AnalystFeedback",
     "AssetHost",
+    "AuditLog",
     "AttackGraphEdge",
     "AttackGraphNode",
     "Explanation",
@@ -24,4 +28,6 @@ __all__ = [
     "ModelRun",
     "NormalizedEvent",
     "RawEvent",
+    "UserAccount",
+    "UserRole",
 ]
