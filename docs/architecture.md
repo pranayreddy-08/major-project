@@ -20,6 +20,6 @@ explicit backend service contracts.
 | Component | Current responsibility | Later responsibility |
 | --- | --- | --- |
 | Frontend | Development landing page | Analyst dashboard and attack graph |
-| Backend | Health endpoint, configuration, schemas, database models | Versioned platform APIs |
+| Backend | Health, intelligence APIs, correlation, graph, risk, response | Full platform APIs |
 | PostgreSQL | Initial platform schema | Event, alert, incident, and graph persistence |
-| ML | Reserved module boundary | Training, evaluation, and inference |
+| ML | Preprocessing, Logistic Regression, SHAP, causal GraphSAGE | Additional model training and inference |

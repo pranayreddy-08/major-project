@@ -1,0 +1,123 @@
+{
+  "dataset": {
+    "rows": 120,
+    "sha256": "4397533a06815da9f30267aae9371516d32e0ef8679565d38fa6f3cf462c6ae6",
+    "version": "synthetic-events-v1"
+  },
+  "environment": {
+    "device": "cpu",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "python": "3.10.0",
+    "scikit_learn": "1.7.2",
+    "shap": "0.48.0",
+    "torch": "2.7.1+cpu"
+  },
+  "example_shap_explanation": {
+    "base_value": -1.9578120010891675,
+    "contributions": [
+      {
+        "feature": "event_type_network_connection",
+        "shap_value": -0.4275423418508401,
+        "value": 1.0
+      },
+      {
+        "feature": "severity_informational",
+        "shap_value": -0.4198718173373708,
+        "value": 1.0
+      },
+      {
+        "feature": "failed_attempts",
+        "shap_value": -0.3368965103953133,
+        "value": -0.3319648784258631
+      },
+      {
+        "feature": "action_allowed",
+        "shap_value": -0.2911595118217959,
+        "value": 1.0
+      },
+      {
+        "feature": "event_type_authentication_success",
+        "shap_value": 0.26885363813891844,
+        "value": 0.0
+      },
+      {
+        "feature": "severity_low",
+        "shap_value": 0.2319820752211662,
+        "value": 0.0
+      },
+      {
+        "feature": "destination_port",
+        "shap_value": 0.14353775483016953,
+        "value": -0.46943154172131646
+      },
+      {
+        "feature": "action_blocked",
+        "shap_value": -0.09937638963746431,
+        "value": 0.0
+      }
+    ],
+    "limitations": "SHAP describes this model's behavior relative to the training background; it does not establish causality or guarantee correctness.",
+    "method": "shap-linear",
+    "predicted_probability": 0.04335213201505857
+  },
+  "experiment_version": "phase4-experiment-v1",
+  "limitations": [
+    "The synthetic dataset is small and label patterns are intentionally simple.",
+    "These metrics validate the pipeline and must not be presented as real-world efficacy.",
+    "Graph evidence is correlational and does not establish causality."
+  ],
+  "models": {
+    "graphsage": {
+      "epochs_trained": 150,
+      "test": {
+        "f1": 0.8,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.03377999528311193,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.7777777777777778,
+        "samples": 18
+      },
+      "validation": {
+        "f1": 1.0,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.03377999528311193,
+        "precision": 1.0,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "samples": 18
+      }
+    },
+    "logistic_regression": {
+      "test": {
+        "f1": 0.8,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.07409998215734959,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.8,
+        "samples": 18
+      },
+      "validation": {
+        "f1": 1.0,
+        "false_positive_rate": 0.0,
+        "inference_time_ms": 0.12260000221431255,
+        "precision": 1.0,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "samples": 18
+      }
+    }
+  },
+  "preprocessing_version": "preprocessing-v1",
+  "split_rows": {
+    "test": 18,
+    "train": 84,
+    "validation": 18
+  },
+  "test_comparison": {
+    "graphsage_minus_logistic_f1": 0.0,
+    "graphsage_minus_logistic_roc_auc": -0.022222222222222254
+  }
+}

@@ -115,6 +115,35 @@ python -m ecti_ml.cli data\samples\synthetic-events-v1.csv `
 The complete workflow and governance rules are documented in `docs/data-pipeline.md` and
 `docs/datasets.md`.
 
+### Intelligence status
+
+Phase 4 is complete. The platform now includes an explainable Logistic Regression baseline,
+rule-based event correlation, deterministic attack-graph construction, causal GraphSAGE event
+classification, transparent risk scoring, SHAP and graph-evidence explanations, and a safe response
+catalogue. Every response remains a recommendation with mandatory human approval and no automatic
+execution path.
+
+The versioned synthetic comparison produced the following test metrics:
+
+| Model | Precision | Recall | F1 | ROC-AUC | False-positive rate |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Logistic Regression | 1.000 | 0.667 | 0.800 | 0.800 | 0.000 |
+| Causal GraphSAGE | 1.000 | 0.667 | 0.800 | 0.778 | 0.000 |
+
+These values validate the pipeline on 18 intentionally simple synthetic test rows; they are not a
+claim of real-world effectiveness. Reproduce the comparison with:
+
+```powershell
+python -m ecti_ml.experiment `
+  --dataset data\samples\synthetic-events-v1.csv `
+  --preprocessing-config ml\configs\preprocessing-v1.json `
+  --experiment-config ml\configs\phase4-experiment-v1.json `
+  --output docs\experiments\phase4-synthetic-v1.json
+```
+
+Module design, the risk formula, API paths, response-safety guarantees, and experiment limitations
+are documented in `docs/intelligence.md`.
+
 ## Development plan
 
 ### Phase 1 - Create and connect the GitHub repository

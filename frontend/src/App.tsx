@@ -18,7 +18,7 @@ function App() {
         </p>
         <div className="status">
           <span className="status-dot" aria-hidden="true" />
-          Phase 3 data pipeline complete
+          Phase 4 intelligence core complete
         </div>
       </section>
 

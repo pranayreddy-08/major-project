@@ -3,7 +3,8 @@
 This package owns leakage-safe data preparation. It chronologically splits cleaned records before
 fitting median imputation, constant categorical imputation, one-hot encoding, or standard scaling.
 Only the training partition fits those transformations; validation and test partitions are transform
-only. Phase 4 will add baseline and graph models.
+only. Phase 4 adds the Logistic Regression baseline, SHAP explanations, and a causal two-layer
+GraphSAGE baseline implemented with PyTorch.
 
 Install and test it from the repository root:
 
@@ -12,6 +13,11 @@ python -m pip install -e ".\ml[dev]"
 pytest ml\tests
 python -m ecti_ml.cli data\samples\synthetic-events-v1.csv `
   --config ml\configs\preprocessing-v1.json
+python -m ecti_ml.experiment `
+  --dataset data\samples\synthetic-events-v1.csv `
+  --preprocessing-config ml\configs\preprocessing-v1.json `
+  --experiment-config ml\configs\phase4-experiment-v1.json `
+  --output docs\experiments\phase4-synthetic-v1.json
 ```
 
 Never use the test partition for tuning, feature selection, threshold selection, or early stopping.

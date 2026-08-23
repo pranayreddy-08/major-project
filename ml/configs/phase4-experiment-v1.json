@@ -1,0 +1,21 @@
+{
+  "experiment_version": "phase4-experiment-v1",
+  "dataset_version": "synthetic-events-v1",
+  "positive_label": "attack",
+  "random_state": 42,
+  "decision_threshold": 0.5,
+  "correlation_window_minutes": 15,
+  "logistic_regression": {
+    "class_weight": "balanced",
+    "max_iter": 1000
+  },
+  "graphsage": {
+    "hidden_size": 32,
+    "learning_rate": 0.01,
+    "max_epochs": 150,
+    "patience": 20,
+    "weight_decay": 0.0001,
+    "aggregation": "causal mean over prior events sharing IP, user, or host"
+  },
+  "selection_policy": "Use validation metrics for model development; report test once without tuning."
+}
