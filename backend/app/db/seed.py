@@ -24,7 +24,7 @@ def _id(name: str) -> UUID:
     return uuid5(NAMESPACE_URL, f"ecti-phase6-demo:{name}")
 
 
-async def _seed_users(session: AsyncSession) -> None:
+async def seed_user_accounts(session: AsyncSession) -> None:
     settings = get_settings()
     existing = set((await session.scalars(select(UserAccount.username))).all())
     accounts = (
@@ -295,6 +295,6 @@ async def _seed_dashboard_data(session: AsyncSession) -> None:
 
 
 async def seed_development_data(session: AsyncSession) -> None:
-    await _seed_users(session)
+    await seed_user_accounts(session)
     await _seed_dashboard_data(session)
     await session.commit()

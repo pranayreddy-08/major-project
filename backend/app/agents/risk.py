@@ -37,7 +37,5 @@ class RiskAgent:
                 )
             )
         return RiskAgentResult(
-            assessments=sorted(
-                assessments, key=lambda item: (-item.risk.score, item.event_id)
-            )
+            assessments=sorted(assessments, key=lambda item: (-item.risk.score, item.event_id))
         )

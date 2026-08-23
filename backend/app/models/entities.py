@@ -241,9 +241,7 @@ class AttackGraphNode(TimestampMixin, Base):
     risk_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     attributes: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint("entity_type", "entity_key", name="uq_graph_node_entity"),
-    )
+    __table_args__ = (UniqueConstraint("entity_type", "entity_key", name="uq_graph_node_entity"),)
 
 
 class AttackGraphEdge(Base):

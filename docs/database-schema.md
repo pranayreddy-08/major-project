@@ -1,8 +1,9 @@
 # Initial database schema
 
-The SQLAlchemy metadata in `backend/app/models/entities.py` is the source of truth for the current
-schema. During local development, the backend container creates missing tables before starting the
-API. Formal versioned migrations will replace `create_all` before deployment.
+The SQLAlchemy metadata in `backend/app/models/entities.py` describes the application model, while
+reviewed Alembic revisions in `backend/migrations/versions/` are the deployment source of truth.
+Development, staging, and production Compose startup run `alembic upgrade head` before serving the
+API. The initial revision is `bbfa5454db7e`.
 
 | Table | Purpose |
 | --- | --- |
@@ -23,3 +24,13 @@ API. Formal versioned migrations will replace `create_all` before deployment.
 UUIDs are used for primary keys. Event time and ingestion time are stored separately, and all
 application timestamps must include a timezone. Flexible source-specific details are stored in JSON
 `attributes` fields; frequently queried common fields remain typed columns and are indexed.
+
+CI applies every revision to an empty PostgreSQL 17 database, runs `alembic check` for model/schema
+drift, downgrades to `base`, and upgrades again. A release still requires a verified backup before
+migration. Destructive or lossy changes must use an expand/migrate/contract sequence rather than a
+single irreversible revision.
+
+`app.db.migrate` supports the one-time Phase 6-to-Phase 8 transition for development/staging
+volumes: it stamps the initial head only when all expected application tables are present and no
+Alembic version table exists. Partial schemas fail, and production legacy schemas require explicit
+operator review rather than automatic stamping.

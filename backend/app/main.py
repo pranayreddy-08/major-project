@@ -24,8 +24,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -34,11 +34,7 @@ async def rate_limit_api(request: Request, call_next):
     if request.url.path.startswith("/api/v1/"):
         client = request.client.host if request.client else "unknown"
         is_login = request.url.path == "/api/v1/auth/token"
-        limit = (
-            settings.login_rate_limit_per_minute
-            if is_login
-            else settings.rate_limit_per_minute
-        )
+        limit = settings.login_rate_limit_per_minute if is_login else settings.rate_limit_per_minute
         key = f"{client}:{request.url.path if is_login else 'api'}"
         allowed, retry_after = rate_limiter.check(key, limit)
         if not allowed:

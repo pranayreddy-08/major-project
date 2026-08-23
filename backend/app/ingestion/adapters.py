@@ -119,9 +119,7 @@ def _parse_syslog_line(line: str, *, year: int) -> dict[str, Any]:
             "raw_message": line,
             "timestamp": values["timestamp"],
             "host": values["host"],
-            "event_type": (
-                values["message_id"] if values["message_id"] != "-" else values["app"]
-            ),
+            "event_type": (values["message_id"] if values["message_id"] != "-" else values["app"]),
             "severity": int(values["priority"]) % 8,
             "application": values["app"],
             "process_id": None if values["process"] == "-" else values["process"],

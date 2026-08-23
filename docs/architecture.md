@@ -78,3 +78,22 @@ PostgreSQL-backed analyst endpoints used by the React dashboard.
 | Backend | Auth, RBAC, rate limiting, platform APIs, agents, audit logging | External identity and deployment integrations |
 | PostgreSQL | Users, events, alerts, incidents, graphs, explanations, feedback, audits | Migration-managed production persistence |
 | ML | Preprocessing, Logistic Regression, SHAP, causal GraphSAGE | Versioned model artifacts and additional training |
+
+## Phase 8 delivery layout
+
+```mermaid
+flowchart LR
+    Push[Direct push to main] --> CI{Format, lint, tests, build, migration lifecycle}
+    CI -->|pass| Images[Immutable backend + frontend GHCR images]
+    CI -->|fail| Stop[No image publication]
+    Images --> Host[Staging or production host]
+    Browser -->|HTTPS| TLS[Reverse proxy / load balancer]
+    TLS --> Frontend[Unprivileged Nginx :8080]
+    Frontend -->|same-origin /api proxy| Backend[Non-root FastAPI :8000]
+    Backend --> Database[(PostgreSQL 17)]
+    Backend --> Approval[Human approval gate]
+```
+
+The repository supplies images and Compose manifests but does not contain cloud credentials or
+select a hosting vendor. Production ports bind to loopback so a separately managed HTTPS endpoint
+can enforce certificates and external access policy. PostgreSQL is not published to the host.

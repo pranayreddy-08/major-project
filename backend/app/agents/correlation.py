@@ -15,13 +15,9 @@ class CorrelationAgent:
         if unknown:
             raise ValueError(f"findings reference unknown events: {', '.join(unknown)}")
         selected_ids = {
-            finding.event_id
-            for finding in request.findings
-            if finding.classification != "benign"
+            finding.event_id for finding in request.findings if finding.classification != "benign"
         }
-        selected_events = [
-            event for event in request.events if event_id(event) in selected_ids
-        ]
+        selected_events = [event for event in request.events if event_id(event) in selected_ids]
         return CorrelationAgentResult(
             incidents=correlate_events(
                 selected_events, window=timedelta(minutes=request.window_minutes)

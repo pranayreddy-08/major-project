@@ -25,8 +25,7 @@ def calculate_risk(value: RiskInput) -> RiskResult:
         "recency": recency,
     }
     components = {
-        name: round(100 * WEIGHTS[name] * component, 4)
-        for name, component in inputs.items()
+        name: round(100 * WEIGHTS[name] * component, 4) for name, component in inputs.items()
     }
     score = round(min(100.0, max(0.0, sum(components.values()))), 2)
     if score >= 85:

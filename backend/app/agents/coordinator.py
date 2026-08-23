@@ -30,9 +30,7 @@ ResultT = TypeVar("ResultT", bound=BaseModel)
 
 
 def _digest(value: BaseModel) -> str:
-    payload = json.dumps(
-        value.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
-    )
+    payload = json.dumps(value.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 

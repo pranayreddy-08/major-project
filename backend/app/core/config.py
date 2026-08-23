@@ -28,16 +28,13 @@ class Settings(BaseSettings):
         default=30, ge=5, le=1440, alias="ACCESS_TOKEN_EXPIRE_MINUTES"
     )
     rate_limit_per_minute: int = Field(default=120, ge=10, alias="RATE_LIMIT_PER_MINUTE")
-    login_rate_limit_per_minute: int = Field(
-        default=10, ge=3, alias="LOGIN_RATE_LIMIT_PER_MINUTE"
-    )
+    login_rate_limit_per_minute: int = Field(default=10, ge=3, alias="LOGIN_RATE_LIMIT_PER_MINUTE")
     demo_analyst_password: str = Field(
         default="analyst-demo-only", min_length=12, alias="DEMO_ANALYST_PASSWORD"
     )
     demo_admin_password: str = Field(
         default="admin-demo-only", min_length=12, alias="DEMO_ADMIN_PASSWORD"
     )
-
 
     @property
     def cors_origin_list(self) -> list[str]:

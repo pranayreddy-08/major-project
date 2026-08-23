@@ -20,6 +20,8 @@ from app.schemas.workflow import (
 )
 
 FIXTURE = Path(__file__).parent / "fixtures" / "phase5-workflow-v1.json"
+
+
 def workflow_request() -> WorkflowRequest:
     return WorkflowRequest.model_validate(json.loads(FIXTURE.read_text(encoding="utf-8")))
 
@@ -167,9 +169,9 @@ class FailingResponseAgent(ResponseAgent):
 
 
 def test_late_stage_failures_preserve_prior_analysis() -> None:
-    explanation_failure = WorkflowCoordinator(
-        explainability=FailingExplainabilityAgent()
-    ).run(workflow_request())
+    explanation_failure = WorkflowCoordinator(explainability=FailingExplainabilityAgent()).run(
+        workflow_request()
+    )
     assert explanation_failure.status == "partial_failure"
     assert explanation_failure.explainability is None
     assert explanation_failure.response is not None

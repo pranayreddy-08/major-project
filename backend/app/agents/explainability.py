@@ -7,20 +7,14 @@ from app.schemas.workflow import (
 
 class ExplainabilityAgent:
     def run(self, request: ExplainabilityAgentRequest) -> ExplainabilityAgentResult:
-        assessment_lookup = {
-            assessment.event_id: assessment for assessment in request.assessments
-        }
+        assessment_lookup = {assessment.event_id: assessment for assessment in request.assessments}
         explanations: list[WorkflowExplanation] = []
         for finding in request.findings:
             if finding.classification == "benign":
                 continue
             assessment = assessment_lookup.get(finding.event_id)
             supporting_edges = sorted(
-                (
-                    edge
-                    for edge in request.attack_graph.edges
-                    if edge.event_id == finding.event_id
-                ),
+                (edge for edge in request.attack_graph.edges if edge.event_id == finding.event_id),
                 key=lambda edge: edge.id,
             )
             supporting_events = sorted({edge.event_id for edge in supporting_edges})

@@ -126,9 +126,7 @@ def run_experiment(
         },
         "test_comparison": {
             "graphsage_minus_logistic_f1": graphsage.test.f1 - baseline.test.f1,
-            "graphsage_minus_logistic_roc_auc": (
-                graphsage.test.roc_auc - baseline.test.roc_auc
-            ),
+            "graphsage_minus_logistic_roc_auc": (graphsage.test.roc_auc - baseline.test.roc_auc),
         },
         "observed_failure_cases": {
             "logistic_regression": _observed_failure_cases(

@@ -23,14 +23,10 @@ class GraphSAGE(nn.Module):
 
     def forward(self, features: torch.Tensor, adjacency: torch.Tensor) -> torch.Tensor:
         neighbor_features = adjacency @ features
-        hidden = torch.relu(
-            self.self_layer_1(features) + self.neighbor_layer_1(neighbor_features)
-        )
+        hidden = torch.relu(self.self_layer_1(features) + self.neighbor_layer_1(neighbor_features))
         hidden = self.dropout(hidden)
         neighbor_hidden = adjacency @ hidden
-        return (
-            self.self_layer_2(hidden) + self.neighbor_layer_2(neighbor_hidden)
-        ).squeeze(1)
+        return (self.self_layer_2(hidden) + self.neighbor_layer_2(neighbor_hidden)).squeeze(1)
 
 
 @dataclass(frozen=True)
@@ -89,13 +85,16 @@ def build_causal_adjacency(
 
 
 def _binary_labels(dataset: PreparedDataset, positive_label: str) -> np.ndarray:
-    return np.concatenate(
-        [
-            dataset.train.labels,
-            dataset.validation.labels,
-            dataset.test.labels,
-        ]
-    ).astype(str) == positive_label
+    return (
+        np.concatenate(
+            [
+                dataset.train.labels,
+                dataset.validation.labels,
+                dataset.test.labels,
+            ]
+        ).astype(str)
+        == positive_label
+    )
 
 
 def train_graphsage(
@@ -137,9 +136,7 @@ def train_graphsage(
     negatives = train_end - positives
     positive_weight = torch.tensor(negatives / max(positives, 1.0))
     loss_function = nn.BCEWithLogitsLoss(pos_weight=positive_weight)
-    optimizer = torch.optim.Adam(
-        model.parameters(), lr=learning_rate, weight_decay=weight_decay
-    )
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     best_loss = float("inf")
     best_state: dict[str, torch.Tensor] | None = None

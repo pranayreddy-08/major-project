@@ -34,7 +34,8 @@ services:
       DEMO_ANALYST_PASSWORD: "${DEMO_ANALYST_PASSWORD:-analyst-demo-only}"
       DEMO_ADMIN_PASSWORD: "${DEMO_ADMIN_PASSWORD:-admin-demo-only}"
     command: >-
-      sh -c "python -m app.db.init_db &&
+      sh -c "python -m app.db.migrate &&
+      python -m app.db.seed_db &&
       uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"

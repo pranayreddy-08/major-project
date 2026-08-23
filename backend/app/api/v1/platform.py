@@ -64,13 +64,9 @@ def _severity_from_level(level: str) -> Severity:
 async def _incident_graph(session: AsyncSession, incident_id: UUID) -> AttackGraph:
     incident_key = str(incident_id)
     edges = list((await session.scalars(select(AttackGraphEdge))).all())
-    selected_edges = [
-        edge for edge in edges if edge.attributes.get("incident_id") == incident_key
-    ]
+    selected_edges = [edge for edge in edges if edge.attributes.get("incident_id") == incident_key]
     node_ids = {
-        node_id
-        for edge in selected_edges
-        for node_id in (edge.source_node_id, edge.target_node_id)
+        node_id for edge in selected_edges for node_id in (edge.source_node_id, edge.target_node_id)
     }
     nodes = (
         list(
@@ -117,9 +113,7 @@ async def overview(
         select(func.count()).select_from(Alert).where(Alert.status == AlertStatus.open)
     )
     active_incidents = await session.scalar(
-        select(func.count())
-        .select_from(Incident)
-        .where(Incident.status != IncidentStatus.closed)
+        select(func.count()).select_from(Incident).where(Incident.status != IncidentStatus.closed)
     )
     critical_alerts = await session.scalar(
         select(func.count()).select_from(Alert).where(Alert.severity == Severity.critical)
@@ -130,11 +124,7 @@ async def overview(
     ).all()
     distribution = {severity: count for severity, count in distribution_rows}
     recent = list(
-        (
-            await session.scalars(
-                select(Alert).order_by(Alert.created_at.desc()).limit(5)
-            )
-        ).all()
+        (await session.scalars(select(Alert).order_by(Alert.created_at.desc()).limit(5))).all()
     )
     return DashboardOverview(
         open_alerts=open_alerts or 0,
@@ -299,9 +289,7 @@ async def get_incident(
     alerts = list(
         (
             await session.scalars(
-                select(Alert)
-                .where(Alert.incident_id == incident_id)
-                .order_by(Alert.created_at)
+                select(Alert).where(Alert.incident_id == incident_id).order_by(Alert.created_at)
             )
         ).all()
     )
@@ -330,9 +318,7 @@ async def run_analysis(
     user: Annotated[AuthenticatedUser, Depends(analyst_or_admin)],
     request: Request,
 ) -> AnalysisRunResult:
-    workflow_request = WorkflowRequest.model_validate(
-        payload.model_dump(exclude={"persist"})
-    )
+    workflow_request = WorkflowRequest.model_validate(payload.model_dump(exclude={"persist"}))
     workflow = coordinator.run(workflow_request)
     stored_events: dict[str, NormalizedEvent] = {}
     stored_alert_ids: list[UUID] = []
@@ -350,9 +336,9 @@ async def run_analysis(
         await session.flush()
 
         incident_map: dict[str, Incident] = {}
-        assessment_by_event = {
-            item.event_id: item for item in workflow.risk.assessments
-        } if workflow.risk else {}
+        assessment_by_event = (
+            {item.event_id: item for item in workflow.risk.assessments} if workflow.risk else {}
+        )
         if workflow.correlation:
             for correlated in workflow.correlation.incidents:
                 risk_scores = [
@@ -546,9 +532,7 @@ async def list_audit_logs(
 ) -> list[AuditLogRead]:
     logs = list(
         (
-            await session.scalars(
-                select(AuditLog).order_by(AuditLog.created_at.desc()).limit(250)
-            )
+            await session.scalars(select(AuditLog).order_by(AuditLog.created_at.desc()).limit(250))
         ).all()
     )
     return [AuditLogRead.model_validate(item) for item in logs]

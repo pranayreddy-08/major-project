@@ -68,9 +68,9 @@ def explain_graph_node(graph: AttackGraph, node_id: str, *, limit: int = 5) -> E
     node = next((candidate for candidate in graph.nodes if candidate.id == node_id), None)
     if node is None:
         raise ValueError(f"unknown graph node: {node_id}")
-    connected = [
-        edge for edge in graph.edges if edge.source == node_id or edge.target == node_id
-    ][:limit]
+    connected = [edge for edge in graph.edges if edge.source == node_id or edge.target == node_id][
+        :limit
+    ]
     return EvidencePath(
         node_id=node_id,
         summary=f"{node.label} is supported by {len(connected)} connected event relationship(s).",

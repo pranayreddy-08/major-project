@@ -1,0 +1,78 @@
+name: ecti-production
+
+x-logging: &default-logging
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:?set POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB:?set POSTGRES_DB}"
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    logging: *default-logging
+
+  backend:
+    image: "${BACKEND_IMAGE:?set immutable BACKEND_IMAGE tag}"
+    environment:
+      APP_ENVIRONMENT: production
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      CORS_ORIGINS: "${FRONTEND_ORIGIN:?set HTTPS FRONTEND_ORIGIN}"
+      JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET}"
+      JWT_ISSUER: "${JWT_ISSUER:-ecti-platform-production}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-ecti-dashboard-production}"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      RATE_LIMIT_PER_MINUTE: "120"
+      LOGIN_RATE_LIMIT_PER_MINUTE: "10"
+      DEMO_ANALYST_PASSWORD: "${ANALYST_PASSWORD:?set ANALYST_PASSWORD}"
+      DEMO_ADMIN_PASSWORD: "${ADMIN_PASSWORD:?set ADMIN_PASSWORD}"
+    command: >-
+      sh -c "alembic upgrade head &&
+      python -m app.db.bootstrap_users &&
+      exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+      --workers ${BACKEND_WORKERS:-2} --no-server-header"
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    logging: *default-logging
+
+  frontend:
+    image: "${FRONTEND_IMAGE:?set immutable FRONTEND_IMAGE tag}"
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    logging: *default-logging
+
+volumes:
+  production_postgres_data:

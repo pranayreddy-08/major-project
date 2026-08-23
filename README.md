@@ -1,5 +1,7 @@
 # Explainable Cyber Threat Intelligence Platform
 
+[![Validate and publish](https://github.com/pranayreddy-08/major-project/actions/workflows/ci.yml/badge.svg)](https://github.com/pranayreddy-08/major-project/actions/workflows/ci.yml)
+
 ## Project goal
 
 Build a cybersecurity decision-support platform that collects security events, detects suspicious activity, connects related events into attack paths, estimates risk, explains each prediction, and recommends mitigation actions. The final system will use Graph Neural Networks (GNNs), conventional machine-learning models, explainable AI (XAI), and a multi-agent workflow behind a real-time dashboard.
@@ -60,7 +62,8 @@ Set-Location ..
 Start PostgreSQL separately and configure `DATABASE_URL` in `.env`, then run:
 
 ```powershell
-python -m app.db.init_db
+alembic -c backend\alembic.ini upgrade head
+python -m app.db.seed_db
 uvicorn app.main:app --app-dir backend --reload
 Set-Location frontend
 npm run dev
@@ -238,6 +241,32 @@ python -m ecti_ml.experiment `
 See `docs/testing.md` for the test matrix and limitations, `docs/demo-script.md` for the presentation
 walkthrough, and `docs/progress/phase7.md` for the implementation record.
 
+### Delivery status
+
+Phase 8 is complete at repository and local-staging level. Every push to `main` runs Python
+format/lint/tests, ML tests, frontend tests/build, and a PostgreSQL migration upgrade/check/rollback
+cycle. Only after those jobs pass does GitHub Actions build and publish immutable backend/frontend
+images to GitHub Container Registry with branch, commit-SHA, and release tags.
+
+Versioned Alembic migrations now replace `create_all` in Compose startup. Production images use
+multi-stage builds, non-root users, health checks, a static unprivileged Nginx frontend, same-origin
+API proxying, bounded logs, dropped Linux capabilities, and read-only application filesystems. The
+staging stack remains synthetic-data-only; the production template omits synthetic dashboard data
+and bootstraps only password-overridden local accounts.
+
+Validate the hardened staging layout locally:
+
+```powershell
+Copy-Item infra\.env.staging.example infra\.env.staging
+# Replace every placeholder value before use.
+docker compose --env-file infra\.env.staging -f infra\compose.staging.yml up --build -d
+```
+
+The repository intentionally does not contain cloud credentials, a public domain, or a remote host,
+so no external environment is mutated automatically. Follow `docs/deployment.md` after choosing a
+target and HTTPS endpoint. The release procedure is in `docs/release-checklist.md`; Phase 8 progress
+is recorded in `docs/progress/phase8.md`.
+
 ## Development plan
 
 ### Phase 1 - Create and connect the GitHub repository
@@ -361,7 +390,7 @@ Define an API contract and test data for each agent before integrating the full 
 
 ### Phase 8 - Continuous integration and deployment
 
-1. Add a GitHub Actions workflow that runs formatting, linting, backend tests, and frontend tests for every pull request. Do not allow failing checks to merge into `main`.
+1. Add a GitHub Actions workflow that runs formatting, linting, backend/ML tests, frontend tests/build, and migration checks for every direct push to `main` (and pull requests if that workflow is adopted later).
 2. Build Docker images for the frontend and backend. Use environment variables for database URL, frontend API URL, CORS origins, JWT secret, and model/data paths.
 3. First deploy a staging environment with synthetic data. A practical prototype layout is:
 

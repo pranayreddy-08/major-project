@@ -38,8 +38,9 @@ Tokens expire after 30 minutes by default. Configure `JWT_ISSUER`, `JWT_AUDIENCE
   deployment needs a shared limiter (for example Redis) and an explicitly trusted proxy policy.
 - HS256 is appropriate for the single-service prototype. A multi-service deployment should assess
   asymmetric signing and formal key rotation.
-- `create_all` is still used for local development. Phase 8 must introduce reviewed migrations and
-  rollback procedures.
+- Versioned Alembic migrations are now used by development and release Compose startup. Operators
+  must still take and verify a PostgreSQL backup before upgrading, and rehearse rollback with the
+  exact application/image revision because database downgrade may be unsafe after new writes.
 - Development seed accounts/data are for synthetic local demonstrations only. They are not created
   when the app environment is production.
 - Audit rows are durable in PostgreSQL but do not yet have external tamper-evident archival.

@@ -15,6 +15,8 @@ htmlcov/
 .env
 .env.*
 !.env.example
+!infra/.env.staging.example
+!infra/.env.production.example
 
 # Local databases, logs, and uploaded/raw data
 *.db

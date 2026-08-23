@@ -47,9 +47,7 @@ def test_preprocessing_splits_before_fit_and_handles_unknown_categories() -> Non
                 "past",
                 "past",
             ],
-            "label": [
-                "attack" if minute % 2 else "benign" for minute in reversed(range(10))
-            ],
+            "label": ["attack" if minute % 2 else "benign" for minute in reversed(range(10))],
         }
     )
     frame = pd.concat([frame, frame.iloc[[0]]], ignore_index=True)
