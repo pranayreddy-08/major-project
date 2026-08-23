@@ -1,0 +1,50 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-01-01T00:00:00Z",
+      "source_ip": "192.0.2.44",
+      "destination_ip": "198.51.100.20",
+      "user": "demo-user",
+      "host": "demo-host",
+      "protocol": "tcp",
+      "action": "denied",
+      "severity": "high",
+      "log_source": "phase5-fixture",
+      "event_type": "authentication_failure",
+      "attributes": {"anomaly_score": 0.82}
+    },
+    {
+      "timestamp": "2026-01-01T00:04:00Z",
+      "source_ip": "192.0.2.44",
+      "destination_ip": "198.51.100.20",
+      "user": "demo-user",
+      "host": "demo-host",
+      "protocol": "tcp",
+      "action": "denied",
+      "severity": "critical",
+      "log_source": "phase5-fixture",
+      "event_type": "credential_attack",
+      "attributes": {"anomaly_score": 0.94}
+    },
+    {
+      "timestamp": "2026-01-01T00:30:00Z",
+      "source_ip": "203.0.113.8",
+      "destination_ip": "198.51.100.30",
+      "user": "service-user",
+      "host": "quiet-host",
+      "protocol": "tcp",
+      "action": "allowed",
+      "severity": "low",
+      "log_source": "phase5-fixture",
+      "event_type": "heartbeat",
+      "attributes": {}
+    }
+  ],
+  "window_minutes": 15,
+  "asset_criticality": 0.9,
+  "attack_stage": 0.7,
+  "anomaly_level": 0.8,
+  "as_of": "2026-01-01T01:00:00Z",
+  "confirmed_malicious_ips": ["192.0.2.44"],
+  "vulnerability_id": "CVE-DEMO-0001"
+}

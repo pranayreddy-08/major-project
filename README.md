@@ -144,6 +144,29 @@ python -m ecti_ml.experiment `
 Module design, the risk formula, API paths, response-safety guarantees, and experiment limitations
 are documented in `docs/intelligence.md`.
 
+### Multi-agent workflow status
+
+Phase 5 is complete. Five bounded components now exchange strict `phase5-v1` JSON contracts:
+detection, correlation, risk, explainability, and response. A coordinator sequences those handoffs,
+returns SHA-256 input/output digests for every decision, isolates component failures, and produces a
+stable workflow ID for identical validated input.
+
+Run the complete workflow with the versioned synthetic fixture:
+
+```powershell
+$body = Get-Content backend\tests\fixtures\phase5-workflow-v1.json -Raw
+Invoke-RestMethod `
+  -Uri http://localhost:8000/api/v1/workflows/analyze `
+  -Method Post `
+  -ContentType application/json `
+  -Body $body
+```
+
+The workflow never executes a mitigation. Its approval state is always pending, execution remains
+disabled, and each response recommendation requires a human analyst. Component contracts, failure
+behavior, API paths, test data, audit limitations, and the workflow diagram are documented in
+`docs/multi-agent-workflow.md`.
+
 ## Development plan
 
 ### Phase 1 - Create and connect the GitHub repository

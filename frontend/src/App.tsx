@@ -13,12 +13,12 @@ function App() {
         <p className="eyebrow">Foundation environment</p>
         <h1 id="page-title">Explainable Cyber Threat Intelligence</h1>
         <p className="summary">
-          The development stack is ready. Detection and analyst workflows will be
-          connected here in later phases.
+          The intelligence agents and audited analyst workflow are ready. The full
+          dashboard will be connected here in Phase 6.
         </p>
         <div className="status">
           <span className="status-dot" aria-hidden="true" />
-          Phase 4 intelligence core complete
+          Phase 5 multi-agent workflow complete
         </div>
       </section>
 
