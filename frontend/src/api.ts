@@ -1,4 +1,4 @@
-import type { User } from "./types";
+import type { SetupStatus, User } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -20,6 +20,41 @@ export async function login(username: string, password: string) {
   });
   if (!response.ok) {
     throw new ApiError(response.status, "The username or password was not accepted.");
+  }
+  return (await response.json()) as {
+    access_token: string;
+    token_type: "bearer";
+    expires_in: number;
+  };
+}
+
+export async function getSetupStatus() {
+  const response = await fetch(`${API_URL}/api/v1/auth/setup-status`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw new ApiError(response.status, "Unable to check platform setup.");
+  return (await response.json()) as SetupStatus;
+}
+
+export async function createInitialAdministrator(
+  username: string,
+  fullName: string,
+  password: string,
+) {
+  const response = await fetch(`${API_URL}/api/v1/auth/setup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, full_name: fullName, password }),
+  });
+  if (!response.ok) {
+    let message = "Unable to create the owner account.";
+    try {
+      const body = (await response.json()) as { detail?: string };
+      message = body.detail ?? message;
+    } catch {
+      // Keep the generic setup failure for non-JSON upstream responses.
+    }
+    throw new ApiError(response.status, message);
   }
   return (await response.json()) as {
     access_token: string;

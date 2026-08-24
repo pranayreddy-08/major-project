@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import record_audit
@@ -10,14 +10,70 @@ from app.core.security import (
     AuthenticatedUser,
     create_access_token,
     get_current_user,
+    hash_password,
     verify_missing_user_password,
     verify_password,
 )
 from app.db.session import get_db_session
-from app.models import UserAccount
-from app.schemas.platform import TokenResponse, UserPublic
+from app.models import UserAccount, UserRole
+from app.schemas.platform import (
+    InitialAdministratorCreate,
+    SetupStatus,
+    TokenResponse,
+    UserPublic,
+)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+
+
+@router.get("/setup-status", response_model=SetupStatus)
+async def setup_status(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> SetupStatus:
+    user_count = await session.scalar(select(func.count()).select_from(UserAccount))
+    return SetupStatus(setup_required=(user_count or 0) == 0)
+
+
+@router.post("/setup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+async def create_initial_administrator(
+    payload: InitialAdministratorCreate,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    request: Request,
+    response: Response,
+) -> TokenResponse:
+    bind = session.get_bind()
+    if bind.dialect.name == "postgresql":
+        await session.execute(text("LOCK TABLE user_accounts IN EXCLUSIVE MODE"))
+    user_count = await session.scalar(select(func.count()).select_from(UserAccount))
+    if user_count:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Platform setup has already been completed",
+        )
+
+    account = UserAccount(
+        username=payload.username.strip().lower(),
+        full_name=payload.full_name.strip(),
+        password_hash=hash_password(payload.password),
+        role=UserRole.administrator,
+        active=True,
+    )
+    session.add(account)
+    await session.flush()
+    await record_audit(
+        session,
+        actor_username=account.username,
+        action="initial_administrator_created",
+        resource_type="user_account",
+        resource_id=str(account.id),
+        detail={"role": UserRole.administrator.value},
+        ip_address=request.client.host if request.client else None,
+    )
+    token, expires_in = create_access_token(account)
+    await session.commit()
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
+    return TokenResponse(access_token=token, expires_in=expires_in)
 
 
 @router.post("/token", response_model=TokenResponse)

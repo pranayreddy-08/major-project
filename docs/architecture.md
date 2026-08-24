@@ -1,11 +1,13 @@
 # Foundation architecture
 
-The Phase 2 development environment has three services managed by Docker Compose.
+The installed platform combines a Windows host sensor with three Docker-managed local services.
 
 ```mermaid
 flowchart LR
+    Host[Windows telemetry] -->|local collection| Sensor[Endpoint sensor]
+    Sensor -->|token-authenticated :8000| Backend[FastAPI]
     Browser[Analyst browser] -->|HTTP :5173| Frontend[React + TypeScript + Cytoscape]
-    Frontend -->|JWT API :8000| Backend[FastAPI]
+    Frontend -->|JWT API| Backend
     Backend -->|SQL :5432| Database[(PostgreSQL)]
 ```
 
@@ -36,7 +38,8 @@ digests and keeps the approval gate pending; no response component has an execut
 
 ```mermaid
 flowchart LR
-    Login[OAuth2 password form] --> Auth[Argon2 verification]
+    Setup[One-time owner setup] --> Auth[Argon2 account]
+    Login[OAuth2 password form] --> Auth
     Auth --> Token[Signed expiring JWT]
     Token --> RBAC{Database role}
     RBAC -->|Analyst| Dashboard[Dashboard and analysis APIs]
@@ -74,9 +77,10 @@ PostgreSQL-backed analyst endpoints used by the React dashboard.
 
 | Component | Current responsibility | Later responsibility |
 | --- | --- | --- |
+| Windows sensor | Host event/process/listener collection, hashing, retry state, heartbeat | Explicitly approved service/elevated deployment |
 | Frontend | Authenticated analyst dashboard and interactive attack graph | Additional accessibility and operational views |
-| Backend | Auth, RBAC, rate limiting, platform APIs, agents, audit logging | External identity and deployment integrations |
-| PostgreSQL | Users, events, alerts, incidents, graphs, explanations, feedback, audits | Migration-managed production persistence |
+| Backend | Setup/auth, sensor ingestion, RBAC, APIs, agents, audit logging | External identity and deployment integrations |
+| PostgreSQL | Sensors, receipts, users, events, alerts, incidents, graphs, explanations, feedback, audits | Managed backup/archival |
 | ML | Preprocessing, Logistic Regression, SHAP, causal GraphSAGE | Versioned model artifacts and additional training |
 
 ## Phase 8 delivery layout

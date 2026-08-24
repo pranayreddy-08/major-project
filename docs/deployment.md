@@ -14,9 +14,21 @@ Deployment must use the immutable `sha-*` tag recorded in the release notes, nev
 The workflow uses read-only repository permission except for the image job's scoped
 `packages: write` permission and authenticates to GHCR with the repository `GITHUB_TOKEN`.
 
+## Installed Windows deployment
+
+Build `release\ecti-windows-x64.zip` on Windows with
+`installer\windows\Build-Bundle.ps1`. After extracting it, run
+`installer\windows\Install-ECTI.ps1`. The installer generates local secrets, builds the
+loopback-only services, starts the current-user sensor, and opens <http://127.0.0.1:8080>. Create
+the first owner in the browser. Use the adjacent `Start-ECTI.ps1` and `Stop-ECTI.ps1` scripts
+afterward. Docker Desktop is required.
+
+The installer does not create a Windows service, scheduled task, firewall rule, or public listener.
+See `endpoint-sensor.md` for its telemetry and privilege boundary.
+
 ## Local staging deployment
 
-Staging is the academic demonstration target and contains synthetic data only.
+Staging validates the hardened web-service layout. It starts with an empty account table.
 
 ```powershell
 Copy-Item infra\.env.staging.example infra\.env.staging
@@ -26,9 +38,9 @@ docker compose --env-file infra\.env.staging -f infra\compose.staging.yml up --b
 docker compose --env-file infra\.env.staging -f infra\compose.staging.yml ps
 ```
 
-Open the configured `FRONTEND_ORIGIN`. Nginx serves the compiled SPA and proxies `/api/` to FastAPI,
-so the browser never resolves an internal Docker hostname. The backend runs migrations, then the
-idempotent synthetic seed, before accepting traffic.
+Open the configured `FRONTEND_ORIGIN`. Nginx serves the compiled SPA and proxies `/api/` to
+FastAPI, so the browser never resolves an internal Docker hostname. The backend runs migrations
+before accepting traffic; create the first owner through the setup screen.
 
 ## Production host prerequisites
 
@@ -72,9 +84,9 @@ Pull and start the exact SHA-tagged images from the environment file:
 curl --fail --silent http://127.0.0.1:${FRONTEND_PORT:-8080}/health
 ```
 
-Backend startup executes `alembic upgrade head` before the API. It then idempotently creates the
-configured analyst/administrator accounts without synthetic incidents. Never run
-`app.db.seed_db` in production; it refuses production mode by design.
+Backend startup executes `alembic upgrade head` before the API. It does not create any account or
+dashboard record. Create the first owner once through the setup screen and protect that endpoint by
+keeping the service private until initialization is complete.
 
 ## Rollback
 

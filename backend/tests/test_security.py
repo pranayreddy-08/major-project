@@ -78,7 +78,7 @@ def test_expired_access_token_is_rejected() -> None:
     assert exc_info.value.status_code == 401
 
 
-def test_production_rejects_documented_demo_secrets() -> None:
+def test_production_rejects_default_or_missing_service_secrets() -> None:
     with pytest.raises(ValueError, match="JWT_SECRET"):
         Settings(_env_file=None, APP_ENVIRONMENT="production")
 
@@ -123,12 +123,18 @@ def test_openapi_documents_phase6_platform_surface() -> None:
     paths = app.openapi()["paths"]
     expected = {
         "/api/v1/auth/token",
+        "/api/v1/auth/setup-status",
+        "/api/v1/auth/setup",
         "/api/v1/auth/me",
+        "/api/v1/sensors",
+        "/api/v1/sensors/ingest",
         "/api/v1/platform/overview",
         "/api/v1/platform/events",
         "/api/v1/platform/alerts",
         "/api/v1/platform/incidents",
         "/api/v1/platform/analysis/run",
+        "/api/v1/platform/workflows/recent",
+        "/api/v1/platform/models",
         "/api/v1/platform/feedback",
         "/api/v1/platform/audit-logs",
     }

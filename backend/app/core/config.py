@@ -29,12 +29,10 @@ class Settings(BaseSettings):
     )
     rate_limit_per_minute: int = Field(default=120, ge=10, alias="RATE_LIMIT_PER_MINUTE")
     login_rate_limit_per_minute: int = Field(default=10, ge=3, alias="LOGIN_RATE_LIMIT_PER_MINUTE")
-    demo_analyst_password: str = Field(
-        default="analyst-demo-only", min_length=12, alias="DEMO_ANALYST_PASSWORD"
+    sensor_ingest_token: str | None = Field(
+        default=None, min_length=32, alias="SENSOR_INGEST_TOKEN"
     )
-    demo_admin_password: str = Field(
-        default="admin-demo-only", min_length=12, alias="DEMO_ADMIN_PASSWORD"
-    )
+    sensor_offline_seconds: int = Field(default=180, ge=60, le=3600, alias="SENSOR_OFFLINE_SECONDS")
 
     @property
     def cors_origin_list(self) -> list[str]:
@@ -42,14 +40,12 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @model_validator(mode="after")
-    def production_must_override_demo_secrets(self) -> "Settings":
+    def production_must_override_secrets(self) -> "Settings":
         if self.app_environment.lower() == "production":
             if self.jwt_secret == "development-only-change-this-jwt-secret":
                 raise ValueError("JWT_SECRET must be changed in production")
-            if self.demo_analyst_password == "analyst-demo-only":
-                raise ValueError("DEMO_ANALYST_PASSWORD must be changed in production")
-            if self.demo_admin_password == "admin-demo-only":
-                raise ValueError("DEMO_ADMIN_PASSWORD must be changed in production")
+            if self.sensor_ingest_token is None:
+                raise ValueError("SENSOR_INGEST_TOKEN must be configured in production")
         return self
 
 

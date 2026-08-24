@@ -9,6 +9,29 @@ export interface User {
   active: boolean;
 }
 
+export interface SetupStatus {
+  setup_required: boolean;
+}
+
+export interface EndpointSensor {
+  id: string;
+  sensor_id: string;
+  hostname: string;
+  operating_system: string;
+  agent_version: string;
+  ip_addresses: string[];
+  capabilities: Record<string, unknown>;
+  last_seen_at: string;
+  last_event_at: string | null;
+  status: "online" | "offline";
+}
+
+export interface SensorServiceStatus {
+  ingest_configured: boolean;
+  sensors_total: number;
+  sensors_online: number;
+}
+
 export interface Alert {
   id: string;
   normalized_event_id: string | null;
@@ -76,6 +99,59 @@ export interface Overview {
   model_status: string;
   model_name: string;
   model_version: string;
+}
+
+export interface WorkflowAgentStep {
+  sequence: number;
+  agent: "detection" | "correlation" | "risk" | "explainability" | "response";
+  status: "completed" | "failed" | "skipped";
+  started_at: string;
+  completed_at: string;
+  duration_ms: number;
+  detail: string;
+  input_digest: string;
+  output_digest: string | null;
+}
+
+export interface WorkflowRun {
+  workflow_id: string;
+  status: "completed" | "partial_failure" | "failed";
+  actor: string;
+  created_at: string;
+  event_count: number;
+  alert_count: number;
+  persisted: boolean;
+  detection_model: string;
+  detection_model_version: string;
+  steps: WorkflowAgentStep[];
+  human_approval_required: true;
+  execution_permitted: false;
+}
+
+export interface ModelMetrics {
+  precision: number;
+  recall: number;
+  f1: number;
+  roc_auc: number;
+  samples: number;
+}
+
+export interface ModelProfile {
+  id: string;
+  name: string;
+  version: string;
+  kind: "deterministic_baseline" | "logistic_regression" | "graph_neural_network";
+  deployment: "runtime" | "evaluated_offline";
+  purpose: string;
+  architecture: string;
+  metrics: ModelMetrics | null;
+}
+
+export interface ModelCatalog {
+  experiment_version: string;
+  dataset_version: string;
+  models: ModelProfile[];
+  limitations: string[];
 }
 
 export interface Explanation {

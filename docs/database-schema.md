@@ -3,7 +3,7 @@
 The SQLAlchemy metadata in `backend/app/models/entities.py` describes the application model, while
 reviewed Alembic revisions in `backend/migrations/versions/` are the deployment source of truth.
 Development, staging, and production Compose startup run `alembic upgrade head` before serving the
-API. The initial revision is `bbfa5454db7e`.
+API. The current Phase 9 head is `4f2a9c1d7e90`.
 
 | Table | Purpose |
 | --- | --- |
@@ -20,6 +20,8 @@ API. The initial revision is `bbfa5454db7e`.
 | `analyst_feedback` | Analyst verdicts and comments for alerts/incidents |
 | `user_accounts` | Argon2-hashed local accounts, active state, and analyst/administrator role |
 | `audit_logs` | Durable security-sensitive action history and request-origin metadata |
+| `endpoint_sensors` | Registered device identity, capabilities, IPs, and heartbeat/event times |
+| `sensor_event_receipts` | Per-sensor source-key deduplication linked to normalized events |
 
 UUIDs are used for primary keys. Event time and ingestion time are stored separately, and all
 application timestamps must include a timezone. Flexible source-specific details are stored in JSON

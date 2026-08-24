@@ -63,7 +63,6 @@ Start PostgreSQL separately and configure `DATABASE_URL` in `.env`, then run:
 
 ```powershell
 alembic -c backend\alembic.ini upgrade head
-python -m app.db.seed_db
 uvicorn app.main:app --app-dir backend --reload
 Set-Location frontend
 npm run dev
@@ -186,14 +185,9 @@ backed analyst/administrator roles, strict claim validation, CORS allowlisting, 
 rate limiting, and durable action logs. All analysis and recommendations remain decision support;
 there is still no automatic execution endpoint.
 
-Start the stack and open <http://localhost:5173>. The local synthetic-demo login is:
-
-```text
-username: analyst
-password: analyst-demo-only
-```
-
-These defaults are for local demonstrations only and production configuration rejects them.
+Start the stack and open <http://localhost:5173>. On an empty database, the browser presents a
+one-time owner setup form. Choose the administrator username and password; the repository contains
+no preset or demo accounts.
 Endpoint contracts are documented in `docs/api.md`, security controls and limitations in
 `docs/security.md`, and dashboard usage in `docs/user-guide.md`.
 
@@ -251,8 +245,8 @@ images to GitHub Container Registry with branch, commit-SHA, and release tags.
 Versioned Alembic migrations now replace `create_all` in Compose startup. Production images use
 multi-stage builds, non-root users, health checks, a static unprivileged Nginx frontend, same-origin
 API proxying, bounded logs, dropped Linux capabilities, and read-only application filesystems. The
-staging stack remains synthetic-data-only; the production template omits synthetic dashboard data
-and bootstraps only password-overridden local accounts.
+staging and production stacks start without accounts or preloaded dashboard records. The first
+owner is created once through the setup screen.
 
 Validate the hardened staging layout locally:
 
@@ -266,6 +260,46 @@ The repository intentionally does not contain cloud credentials, a public domain
 so no external environment is mutated automatically. Follow `docs/deployment.md` after choosing a
 target and HTTPS endpoint. The release procedure is in `docs/release-checklist.md`; Phase 8 progress
 is recorded in `docs/progress/phase8.md`.
+
+### Installed endpoint platform status
+
+Phase 9 changes the project from a browser-only demonstration into a Windows-first local endpoint
+platform. A browser cannot read Windows processes, event logs, or listening ports directly, so the
+download contains two cooperating parts:
+
+```text
+Windows sensor -> loopback FastAPI analysis service -> PostgreSQL -> browser dashboard
+```
+
+The per-user sensor reads supported Microsoft Defender and Windows security events, detects a small
+auditable set of suspicious process patterns, notices newly opened high-risk listening ports, and
+sends heartbeats. Command lines are SHA-256 hashed before ingestion. The dashboard's **This device**
+view reports sensor health and capabilities; detections flow through the existing explainability,
+incident, attack-graph, and human-approval workflow.
+
+Build the local Windows package:
+
+```powershell
+.\installer\windows\Build-Bundle.ps1
+```
+
+Extract `release\ecti-windows-x64.zip`, then run:
+
+```powershell
+.\installer\windows\Install-ECTI.ps1
+```
+
+Docker Desktop is required for the local web services. The sensor runs as the current Windows user
+and is deliberately not installed as a privileged persistent service. After reboot, use
+`Start-ECTI.ps1`; use `Stop-ECTI.ps1` to stop the sensor and containers. See
+`docs/endpoint-sensor.md` for the data boundary, supported signals, and limitations.
+
+The dashboard navigation is organized into **Monitor**, **Investigate**, and **Intelligence**. The
+home view guides users through collection, triage, agent evidence, and a human decision. **Agent
+workflow** displays the five real audited handoffs and their timing/digests. **Models & GNN** shows
+the live deterministic detector alongside the offline Logistic Regression and causal GraphSAGE
+comparison. GraphSAGE is implemented and evaluated, but is not misrepresented as the live endpoint
+detector.
 
 ## Development plan
 

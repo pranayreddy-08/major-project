@@ -16,6 +16,18 @@ class TokenResponse(BaseModel):
     expires_in: int = Field(gt=0)
 
 
+class SetupStatus(BaseModel):
+    setup_required: bool
+
+
+class InitialAdministratorCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    username: str = Field(min_length=3, max_length=100, pattern=r"^[A-Za-z0-9_.-]+$")
+    full_name: str = Field(min_length=2, max_length=255)
+    password: str = Field(min_length=12, max_length=128)
+
+
 class UserPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -139,6 +151,59 @@ class DashboardOverview(BaseModel):
     model_status: Literal["operational", "degraded"]
     model_name: str
     model_version: str
+
+
+class WorkflowAgentStep(BaseModel):
+    sequence: int = Field(ge=1)
+    agent: str
+    status: Literal["completed", "failed", "skipped"]
+    started_at: datetime
+    completed_at: datetime
+    duration_ms: float = Field(ge=0)
+    detail: str
+    input_digest: str
+    output_digest: str | None = None
+
+
+class WorkflowRunSummary(BaseModel):
+    workflow_id: str
+    status: Literal["completed", "partial_failure", "failed"]
+    actor: str
+    created_at: datetime
+    event_count: int = Field(ge=0)
+    alert_count: int = Field(ge=0)
+    persisted: bool
+    detection_model: str
+    detection_model_version: str
+    steps: list[WorkflowAgentStep]
+    human_approval_required: Literal[True] = True
+    execution_permitted: Literal[False] = False
+
+
+class ModelMetrics(BaseModel):
+    precision: float = Field(ge=0, le=1)
+    recall: float = Field(ge=0, le=1)
+    f1: float = Field(ge=0, le=1)
+    roc_auc: float = Field(ge=0, le=1)
+    samples: int = Field(ge=1)
+
+
+class ModelProfile(BaseModel):
+    id: str
+    name: str
+    version: str
+    kind: Literal["deterministic_baseline", "logistic_regression", "graph_neural_network"]
+    deployment: Literal["runtime", "evaluated_offline"]
+    purpose: str
+    architecture: str
+    metrics: ModelMetrics | None = None
+
+
+class ModelCatalog(BaseModel):
+    experiment_version: str
+    dataset_version: str
+    models: list[ModelProfile]
+    limitations: list[str]
 
 
 class IncidentDetail(BaseModel):

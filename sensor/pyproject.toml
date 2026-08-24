@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ecti-endpoint-sensor"
+version = "0.2.0"
+description = "Windows-first defensive telemetry sensor for the ECTI local platform"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+ecti-sensor = "ecti_sensor.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.5",
+    "ruff==0.11.8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["ecti_sensor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

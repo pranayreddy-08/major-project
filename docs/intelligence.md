@@ -10,6 +10,12 @@ The reproducible experiment uses `synthetic-events-v1`, the chronological 84/18/
 A two-layer GraphSAGE implementation classifies the same event nodes with the same preprocessed
 features and split boundaries.
 
+The endpoint-serving workflow currently uses the deterministic
+`severity-anomaly-baseline` version 1.0.0. Logistic Regression and GraphSAGE are implemented and
+reproducibly evaluated offline, but are not loaded into the runtime FastAPI detector. The dashboard
+labels this boundary explicitly; deploying GraphSAGE online requires a versioned model artifact,
+runtime dependency/performance review, and live-data validation.
+
 | Model | Test precision | Test recall | Test F1 | Test ROC-AUC | False-positive rate |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Logistic Regression | 1.000 | 0.667 | 0.800 | 0.800 | 0.000 |

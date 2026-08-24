@@ -100,6 +100,22 @@ class AssetHost(TimestampMixin, Base):
     attributes: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
 
+class EndpointSensor(TimestampMixin, Base):
+    __tablename__ = "endpoint_sensors"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    sensor_id: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    hostname: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    operating_system: Mapped[str] = mapped_column(String(255), nullable=False)
+    agent_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    ip_addresses: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    capabilities: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    last_event_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+
+
 class RawEvent(Base):
     __tablename__ = "raw_events"
 
@@ -143,6 +159,27 @@ class NormalizedEvent(Base):
         Index("ix_normalized_events_source_time", "source_ip", "event_timestamp"),
         Index("ix_normalized_events_host_time", "host", "event_timestamp"),
     )
+
+
+class SensorEventReceipt(Base):
+    __tablename__ = "sensor_event_receipts"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    sensor_id: Mapped[str] = mapped_column(
+        String(100),
+        ForeignKey("endpoint_sensors.sensor_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    event_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    normalized_event_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("normalized_events.id", ondelete="SET NULL"), index=True
+    )
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (UniqueConstraint("sensor_id", "event_key", name="uq_sensor_event_receipt"),)
 
 
 class Incident(TimestampMixin, Base):

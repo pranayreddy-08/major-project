@@ -1,18 +1,21 @@
 # Infrastructure
 
-The root `docker-compose.yml` is the bind-mounted development environment. Phase 8 adds two separate
-release layouts:
-
-| File | Purpose | Data policy |
+| File | Purpose | Exposure |
 | --- | --- | --- |
-| `compose.staging.yml` | Builds and runs the hardened images locally or on a staging host | Deterministic synthetic demo data only |
-| `compose.production.yml` | Pulls immutable GHCR images and runs migrations/account bootstrap | No synthetic dashboard seed |
+| Root `docker-compose.yml` | Bind-mounted development stack | Development host ports |
+| `compose.desktop.yml` | Installed single-PC platform built from the downloaded bundle | Frontend/API on loopback only |
+| `compose.staging.yml` | Hardened locally built staging images | Configured staging origin |
+| `compose.production.yml` | Immutable GHCR image deployment | Loopback behind separately managed HTTPS |
 
-Copy the matching `.env.*.example` file to an ignored `.env.*` file and replace every placeholder.
-Never commit the copied file. Production services bind to loopback; terminate HTTPS in a host-level
-reverse proxy or managed load balancer before exposing the frontend.
+All layouts apply Alembic migrations before FastAPI starts. They do not create users or seed
+dashboard records. On an empty database, the operator creates the initial administrator once in the
+browser.
 
-Both layouts use named PostgreSQL volumes, health-gated startup, bounded local log rotation,
-read-only application filesystems, dropped capabilities, and `no-new-privileges`. Backend startup
-applies Alembic migrations before serving traffic. Detailed commands, backup/restore steps, and
-rollback behavior are in `docs/deployment.md`.
+The Windows installer generates the desktop `.env` with independent PostgreSQL, JWT, and endpoint
+sensor secrets. Do not share or commit it. Desktop PostgreSQL is private to the Compose network;
+backend and frontend bind to `127.0.0.1`. The host sensor runs outside Docker because containers
+cannot inspect Windows host event logs and processes.
+
+Staging and production use ignored environment files derived from the matching examples. Replace
+every placeholder, terminate remote access with HTTPS, keep PostgreSQL private, and take a verified
+backup before migrations. See `docs/deployment.md` and `docs/endpoint-sensor.md`.

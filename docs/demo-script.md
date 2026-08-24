@@ -5,15 +5,17 @@
 1. Run `docker compose up --build -d` and wait for all three services to become healthy/running.
 2. Confirm <http://localhost:8000/health>, <http://localhost:8000/docs>, and
    <http://localhost:5173>.
-3. Keep the synthetic analyst credentials ready: `analyst` / `analyst-demo-only`.
-4. Run the commands in `docs/testing.md` and retain the acceptance and experiment JSON records.
+3. On a fresh database, create your own owner account in the one-time setup screen.
+4. Confirm **This device** shows an online Windows sensor.
+5. Run the commands in `docs/testing.md` and retain the acceptance and experiment JSON records.
 
 ## Five-minute walkthrough
 
 1. **Problem and safety (30 seconds):** explain that ECTI is decision support. Point out that it
    recommends actions but has no execution endpoint and always requires human approval.
-2. **Secure access (30 seconds):** sign in as the analyst. Mention Argon2id password verification,
-   expiring JWTs, database-backed roles, bounded input, and audit logging.
+2. **Installed collection and access (45 seconds):** show the online endpoint sensor, then sign in
+   with the owner account you created. Mention Argon2id, expiring JWTs, bounded input, deduplication,
+   audit logging, and that no preset credentials exist.
 3. **Overview and alert (45 seconds):** show counts and severity distribution. Open the priority
    queue, filter it, then select a suspicious alert.
 4. **Explainability (45 seconds):** show confidence, important evidence, readable reasoning, and the
@@ -29,8 +31,9 @@
 
 ## Questions to anticipate
 
-- **Is it production ready?** No. It is an evaluated synthetic-data prototype; external identity,
-  operational datasets, load testing, migrations, monitoring, backups, and deployment remain.
+- **Is it production ready?** No. It is an installed explainable prototype with real bounded host
+  telemetry; it still lacks full EDR coverage, tamper protection, operational load evidence, and
+  managed monitoring/backups.
 - **Why Logistic Regression and GraphSAGE?** The former provides a transparent baseline; the latter
   tests causal prior-neighbor aggregation on the identical chronological split.
 - **Can it block an IP?** No. `block_ip` is advisory data only and must be approved outside ECTI.

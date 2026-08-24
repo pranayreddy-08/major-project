@@ -18,6 +18,8 @@ def test_initial_schema_contains_required_tables() -> None:
         "analyst_feedback",
         "user_accounts",
         "audit_logs",
+        "endpoint_sensors",
+        "sensor_event_receipts",
     }
 
     assert expected_tables == set(Base.metadata.tables)

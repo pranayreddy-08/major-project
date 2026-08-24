@@ -35,11 +35,9 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       RATE_LIMIT_PER_MINUTE: "120"
       LOGIN_RATE_LIMIT_PER_MINUTE: "10"
-      DEMO_ANALYST_PASSWORD: "${ANALYST_PASSWORD:?set ANALYST_PASSWORD}"
-      DEMO_ADMIN_PASSWORD: "${ADMIN_PASSWORD:?set ADMIN_PASSWORD}"
+      SENSOR_INGEST_TOKEN: "${SENSOR_INGEST_TOKEN:?set SENSOR_INGEST_TOKEN}"
     command: >-
       sh -c "alembic upgrade head &&
-      python -m app.db.bootstrap_users &&
       exec uvicorn app.main:app --host 0.0.0.0 --port 8000
       --workers ${BACKEND_WORKERS:-2} --no-server-header"
     ports:

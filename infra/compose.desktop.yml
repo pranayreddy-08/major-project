@@ -1,0 +1,70 @@
+name: ecti-local
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ecti_local
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?installer must set POSTGRES_PASSWORD}"
+      POSTGRES_DB: ecti_local
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecti_local -d ecti_local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    environment:
+      APP_ENVIRONMENT: production
+      DATABASE_URL: "postgresql+asyncpg://ecti_local:${POSTGRES_PASSWORD}@postgres:5432/ecti_local"
+      CORS_ORIGINS: "http://127.0.0.1:8080,http://localhost:8080"
+      JWT_SECRET: "${JWT_SECRET:?installer must set JWT_SECRET}"
+      JWT_ISSUER: ecti-local-platform
+      JWT_AUDIENCE: ecti-local-dashboard
+      SENSOR_INGEST_TOKEN: "${SENSOR_INGEST_TOKEN:?installer must set SENSOR_INGEST_TOKEN}"
+      SENSOR_OFFLINE_SECONDS: "180"
+    command: >-
+      sh -c "alembic upgrade head &&
+      exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+      --workers 2 --no-server-header"
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ""
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+volumes:
+  local_postgres_data:

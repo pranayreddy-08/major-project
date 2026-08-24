@@ -31,11 +31,9 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: "${ACCESS_TOKEN_EXPIRE_MINUTES:-30}"
       RATE_LIMIT_PER_MINUTE: "${RATE_LIMIT_PER_MINUTE:-120}"
       LOGIN_RATE_LIMIT_PER_MINUTE: "${LOGIN_RATE_LIMIT_PER_MINUTE:-10}"
-      DEMO_ANALYST_PASSWORD: "${DEMO_ANALYST_PASSWORD:-analyst-demo-only}"
-      DEMO_ADMIN_PASSWORD: "${DEMO_ADMIN_PASSWORD:-admin-demo-only}"
+      SENSOR_INGEST_TOKEN: "${SENSOR_INGEST_TOKEN:-local-development-sensor-token-change-before-use-000000000000}"
     command: >-
       sh -c "python -m app.db.migrate &&
-      python -m app.db.seed_db &&
       uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"

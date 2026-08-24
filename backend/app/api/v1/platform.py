@@ -45,9 +45,14 @@ from app.schemas.platform import (
     FeedbackRead,
     IncidentDetail,
     IncidentSummary,
+    ModelCatalog,
+    ModelMetrics,
+    ModelProfile,
     RecommendationRead,
     SeverityCount,
     StoredEvent,
+    WorkflowAgentStep,
+    WorkflowRunSummary,
 )
 from app.schemas.workflow import WorkflowRequest
 
@@ -55,6 +60,64 @@ router = APIRouter(prefix="/platform", tags=["analyst platform"])
 coordinator = WorkflowCoordinator()
 analyst_or_admin = require_roles(UserRole.analyst, UserRole.administrator)
 administrator_only = require_roles(UserRole.administrator)
+
+
+def model_catalog() -> ModelCatalog:
+    return ModelCatalog(
+        experiment_version="phase7-evaluation-v1",
+        dataset_version="synthetic-events-v1",
+        models=[
+            ModelProfile(
+                id="severity-anomaly-baseline",
+                name="Severity + anomaly baseline",
+                version="1.0.0",
+                kind="deterministic_baseline",
+                deployment="runtime",
+                purpose="Produces the live finding and confidence used by the agent workflow.",
+                architecture="Versioned severity, event-marker, action, and anomaly contributions.",
+            ),
+            ModelProfile(
+                id="logistic-regression",
+                name="Logistic Regression",
+                version="phase7-evaluation-v1",
+                kind="logistic_regression",
+                deployment="evaluated_offline",
+                purpose="Transparent tabular benchmark with SHAP explanations.",
+                architecture="Balanced linear classifier over 16 leakage-safe event features.",
+                metrics=ModelMetrics(
+                    precision=1.0,
+                    recall=0.6667,
+                    f1=0.8,
+                    roc_auc=0.8,
+                    samples=18,
+                ),
+            ),
+            ModelProfile(
+                id="graphsage",
+                name="Causal GraphSAGE",
+                version="phase7-evaluation-v1",
+                kind="graph_neural_network",
+                deployment="evaluated_offline",
+                purpose="Tests whether prior related event nodes improve attack classification.",
+                architecture=(
+                    "Two-layer GraphSAGE with causal mean aggregation over prior events "
+                    "sharing an IP, user, or host."
+                ),
+                metrics=ModelMetrics(
+                    precision=1.0,
+                    recall=0.6667,
+                    f1=0.8,
+                    roc_auc=0.7778,
+                    samples=18,
+                ),
+            ),
+        ],
+        limitations=[
+            "Offline metrics use 18 test rows from an intentionally simple synthetic dataset.",
+            "Graph evidence is correlational and does not establish causality.",
+            "GraphSAGE is evaluated code, not the detector currently serving endpoint events.",
+        ],
+    )
 
 
 def _severity_from_level(level: str) -> Severity:
@@ -140,6 +203,53 @@ async def overview(
         model_name="severity-anomaly-baseline",
         model_version="1.0.0",
     )
+
+
+@router.get("/models", response_model=ModelCatalog)
+async def list_models(
+    _: Annotated[AuthenticatedUser, Depends(analyst_or_admin)],
+) -> ModelCatalog:
+    return model_catalog()
+
+
+@router.get("/workflows/recent", response_model=list[WorkflowRunSummary])
+async def recent_workflows(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    _: Annotated[AuthenticatedUser, Depends(analyst_or_admin)],
+    limit: Annotated[int, Query(ge=1, le=25)] = 10,
+) -> list[WorkflowRunSummary]:
+    logs = list(
+        (
+            await session.scalars(
+                select(AuditLog)
+                .where(AuditLog.action == "analysis_run")
+                .order_by(AuditLog.created_at.desc())
+                .limit(limit * 3)
+            )
+        ).all()
+    )
+    summaries: list[WorkflowRunSummary] = []
+    for log in logs:
+        detail = log.detail
+        if not isinstance(detail.get("agents"), list):
+            continue
+        summaries.append(
+            WorkflowRunSummary(
+                workflow_id=log.resource_id or "unknown",
+                status=detail.get("status", "failed"),
+                actor=log.actor_username,
+                created_at=log.created_at,
+                event_count=detail.get("events", 0),
+                alert_count=detail.get("alerts_persisted", 0),
+                persisted=bool(detail.get("persist", False)),
+                detection_model=detail.get("detection_model", "unknown"),
+                detection_model_version=detail.get("detection_model_version", "unknown"),
+                steps=[WorkflowAgentStep.model_validate(step) for step in detail["agents"]],
+            )
+        )
+        if len(summaries) >= limit:
+            break
+    return summaries
 
 
 @router.get("/events", response_model=list[StoredEvent])
@@ -463,6 +573,18 @@ async def run_analysis(
             "events": len(workflow_request.events),
             "alerts_persisted": len(stored_alert_ids),
             "persist": payload.persist,
+            "detection_model": coordinator.detection.model_name,
+            "detection_model_version": coordinator.detection.model_version,
+            "agents": [
+                {
+                    **record.model_dump(mode="json"),
+                    "duration_ms": max(
+                        0.0,
+                        (record.completed_at - record.started_at).total_seconds() * 1000,
+                    ),
+                }
+                for record in workflow.audit_trail
+            ],
         },
         ip_address=request.client.host if request.client else None,
     )

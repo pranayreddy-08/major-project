@@ -1,51 +1,50 @@
-# Phase 6 security design
+# Security design
 
-Phase 6 adds prototype authentication and authorization without weakening the human-control
-guarantees from earlier phases.
+## Identity and access
 
-## Controls
+- A fresh installation contains no users. `POST /api/v1/auth/setup` can create exactly one initial
+  administrator and returns `409` after setup. PostgreSQL locks the account table during creation
+  to prevent concurrent first-owner races.
+- Passwords are salted Argon2id hashes. Tokens are signed, expire after 30 minutes by default, pin
+  the permitted algorithm, and validate subject, role, issuer, audience, issue time, expiry, and ID.
+- Each authenticated request reloads the active account and role from PostgreSQL.
+- Browser tokens stay in React memory. They are not stored in local storage or cookies.
+- Analysts can use investigation APIs; administrators can additionally read audit logs.
+- Login, setup, ingestion, analysis, and feedback actions create durable audit records.
+- Public and authenticated endpoints use bounded inputs and sliding-window rate limits.
 
-- Passwords are stored as salted Argon2id hashes through `PasswordHash.recommended()` from
-  `pwdlib`. Plaintext passwords are used only during the login request and are never stored.
-- Access tokens are signed with HS256 and contain verified `sub`, `role`, `iss`, `aud`, `iat`,
-  `exp`, and `jti` claims. The decoder pins the permitted algorithm instead of trusting the token
-  header.
-- The token subject uses a `username:` prefix to avoid identifier collisions.
-- Every authenticated request reloads the account from PostgreSQL, verifies that it is active, and
-  compares the current database role with the signed role.
-- Analysts can use dashboard and analysis endpoints. Only administrators can read audit logs.
-- Login attempts, event ingestion, workflow analysis, and feedback submissions write audit rows.
-  Failed logins use a generic response and still perform a dummy Argon2 verification when the
-  username is unknown.
-- API calls use a sliding-window rate limiter. Login has a lower limit than authenticated API
-  traffic and returns `429` plus `Retry-After` when full.
-- Browser tokens remain in React memory. They are not written to local storage or cookies.
-- CORS accepts only configured origins. The frontend never connects directly to PostgreSQL.
+## Endpoint sensor boundary
+
+The browser cannot inspect the operating system. The Windows sensor is a separate local process that
+collects a narrow set of defensive signals and sends bounded batches to the loopback API using
+`X-Sensor-Token`. Token comparison is constant-time, ingestion fails closed when the token is not
+configured, event keys are deduplicated, and online status uses server receipt time.
+
+The desktop installer generates independent random PostgreSQL, JWT, and sensor secrets. Its Docker
+ports bind only to `127.0.0.1`. Non-loopback sensor API URLs must use HTTPS. The sensor hashes
+suspicious process command lines before upload and does not collect file contents, browser history,
+documents, keystrokes, or credentials.
+
+The installer is per-user and does not create an elevated service or persistence task. This avoids
+silently granting SYSTEM privileges. Some protected Windows Security log channels may therefore be
+unavailable; enabling broader elevated collection must be a separate explicit administrator choice.
 
 ## Environment requirements
 
-`JWT_SECRET`, `DEMO_ANALYST_PASSWORD`, and `DEMO_ADMIN_PASSWORD` must be replaced before using
-`APP_ENVIRONMENT=production`; configuration validation rejects the local defaults. Use a randomly
-generated secret of at least 32 characters and deployment-managed secrets rather than committing
-values to Git.
+`JWT_SECRET`, `SENSOR_INGEST_TOKEN`, and the database password must be unique secrets of at least
+32 characters in production. Configure `JWT_ISSUER`, `JWT_AUDIENCE`, CORS origins, and token
+expiry consistently. Never commit the generated desktop `.env` or sensor configuration.
 
-Tokens expire after 30 minutes by default. Configure `JWT_ISSUER`, `JWT_AUDIENCE`, and
-`ACCESS_TOKEN_EXPIRE_MINUTES` consistently across replicas.
+## Current limitations
 
-## Prototype limitations
-
-- The rate limiter is in-process and keyed by the directly connected client address. A multi-replica
-  deployment needs a shared limiter (for example Redis) and an explicitly trusted proxy policy.
-- HS256 is appropriate for the single-service prototype. A multi-service deployment should assess
-  asymmetric signing and formal key rotation.
-- Versioned Alembic migrations are now used by development and release Compose startup. Operators
-  must still take and verify a PostgreSQL backup before upgrading, and rehearse rollback with the
-  exact application/image revision because database downgrade may be unsafe after new writes.
-- Development seed accounts/data are for synthetic local demonstrations only. They are not created
-  when the app environment is production.
-- Audit rows are durable in PostgreSQL but do not yet have external tamper-evident archival.
-- The platform provides decision support, not autonomous response. There is no security-control
-  execution endpoint.
-
-The implementation follows FastAPI's documented OAuth2 bearer/JWT structure, uses pwdlib's
-recommended Argon2 settings, and validates registered JWT expiration/issuer/audience claims.
+- The platform detects and explains supported signals; it is not a replacement for Microsoft
+  Defender or a professionally managed EDR.
+- Response actions remain recommendations. There is no automatic remediation endpoint.
+- Process-pattern and port rules are intentionally narrow and can produce false positives.
+- The in-process rate limiter is not suitable for a multi-replica public service without a shared
+  limiter and trusted-proxy policy.
+- HS256 is suitable for this single-service local layout; distributed services should assess
+  asymmetric signing and formal rotation.
+- Audit rows are durable but do not yet have external tamper-evident archival.
+- Operators must back up PostgreSQL before migrations; a mechanical downgrade is not proof of
+  data-preserving rollback.
