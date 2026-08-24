@@ -49,6 +49,8 @@ link each accepted source signal to its normalized event.
 | GET | `/api/v1/platform/incidents/{id}` | Analyst/admin | Correlated incident |
 | GET | `/api/v1/platform/incidents/{id}/graph` | Analyst/admin | Cytoscape nodes and edges |
 | POST | `/api/v1/platform/analysis/run` | Analyst/admin | Run and optionally persist the workflow |
+| GET | `/api/v1/platform/scenarios` | Analyst/admin | List the safe presentation-scenario catalog |
+| POST | `/api/v1/platform/scenarios/{scenario_id}/run` | Analyst/admin | Run one scenario without persisting events or alerts |
 | GET | `/api/v1/platform/workflows/recent` | Analyst/admin | Recent audited agent steps, timing, model, and safety gate |
 | GET | `/api/v1/platform/models` | Analyst/admin | Runtime and offline-evaluated model catalog with bounded metrics |
 | GET/POST | `/api/v1/platform/feedback` | Analyst/admin | Read or record analyst verdicts |
@@ -57,3 +59,7 @@ link each accepted source signal to its normalized event.
 Recommendations always have human approval required and automatic execution disabled. Normal API
 errors use `401` for invalid identity, `403` for insufficient role, `404` for missing resources,
 `409` for completed first-run setup, `422` for invalid input, and `429` for rate limits.
+
+Scenario runs always set `persist=false`. Their events use the `ecti-scenario-lab` source and carry
+`simulation=true` plus a scenario identifier. The workflow result is returned to the caller, but
+sample events and alerts do not contaminate operational counts.

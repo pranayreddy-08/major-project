@@ -16,18 +16,20 @@
 2. **Installed collection and access (45 seconds):** show the online endpoint sensor, then sign in
    with the owner account you created. Mention Argon2id, expiring JWTs, bounded input, deduplication,
    audit logging, and that no preset credentials exist.
-3. **Overview and alert (45 seconds):** show counts and severity distribution. Open the priority
-   queue, filter it, then select a suspicious alert.
-4. **Explainability (45 seconds):** show confidence, important evidence, readable reasoning, and the
-   limitation that correlation/model evidence does not prove causality.
-5. **Incident and graph (60 seconds):** open the incident timeline and risk score, then the attack
-   graph. Select entities and connect graph edges back to the correlated evidence.
-6. **Human decision (45 seconds):** show advisory recommendations and submit analyst feedback.
-   Reiterate that automatic execution remains false.
-7. **Evaluation (45 seconds):** open `docs/experiments/phase7-synthetic-v1.json`. Show the confusion
-   counts and retained false-negative row rather than quoting only aggregate scores.
-8. **Acceptance (30 seconds):** open `docs/acceptance/phase7-synthetic-v1.json` and show that every
-   raw-log-to-graph criterion passed within the local 2,000 ms limit.
+3. **Threat scenario (60 seconds):** open **Intelligence > Threat scenarios**, run Credential attack,
+   and compare its expected and actual Attack labels. Point out confidence, risk, graph nodes, and
+   the zero stored events/alerts proof.
+4. **Agent handoffs (45 seconds):** use the same result to walk through Detection, Correlation, Risk,
+   Explainability, and Response. Show the human gate and that automatic execution is disabled.
+5. **Classification range (30 seconds):** run Suspicious tool activity and Normal activity. Explain
+   why dual-use tooling is Suspicious while routine behavior remains Benign with no incident.
+6. **Explainability and graph (45 seconds):** show evidence and readable reasoning, then use an
+   attack scenario's graph output. State that correlation/model evidence does not prove causality.
+7. **Models and GNN (45 seconds):** show that the live scenario uses the deterministic baseline.
+   Then open **Models & GNN** for the offline Logistic Regression and GraphSAGE comparison; do not
+   claim GraphSAGE is the live endpoint detector.
+8. **Evaluation and acceptance (30 seconds):** open the retained experiment and acceptance JSON
+   records. Show the confusion counts, known false negative, and passed raw-log-to-graph criteria.
 
 ## Questions to anticipate
 

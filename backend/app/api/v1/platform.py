@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated
 from uuid import UUID
 
@@ -23,6 +24,7 @@ from app.models import (
     UserRole,
 )
 from app.models.entities import AlertStatus, IncidentStatus, Severity
+from app.scenarios import SCENARIO_BY_ID, build_scenario_request, list_scenarios
 from app.schemas.intelligence import (
     AttackGraph,
     ResponseContext,
@@ -51,6 +53,7 @@ from app.schemas.platform import (
     RecommendationRead,
     SeverityCount,
     StoredEvent,
+    ThreatScenarioRead,
     WorkflowAgentStep,
     WorkflowRunSummary,
 )
@@ -210,6 +213,26 @@ async def list_models(
     _: Annotated[AuthenticatedUser, Depends(analyst_or_admin)],
 ) -> ModelCatalog:
     return model_catalog()
+
+
+@router.get("/scenarios", response_model=list[ThreatScenarioRead])
+async def threat_scenarios(
+    _: Annotated[AuthenticatedUser, Depends(analyst_or_admin)],
+) -> list[ThreatScenarioRead]:
+    return list_scenarios()
+
+
+@router.post("/scenarios/{scenario_id}/run", response_model=AnalysisRunResult)
+async def run_threat_scenario(
+    scenario_id: str,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    user: Annotated[AuthenticatedUser, Depends(analyst_or_admin)],
+    request: Request,
+) -> AnalysisRunResult:
+    if scenario_id not in SCENARIO_BY_ID:
+        raise HTTPException(status_code=404, detail="Threat scenario not found")
+    payload = build_scenario_request(scenario_id, datetime.now(timezone.utc))
+    return await run_analysis(payload, session, user, request)
 
 
 @router.get("/workflows/recent", response_model=list[WorkflowRunSummary])
@@ -573,6 +596,10 @@ async def run_analysis(
             "events": len(workflow_request.events),
             "alerts_persisted": len(stored_alert_ids),
             "persist": payload.persist,
+            "simulation": all(
+                event.attributes.get("simulation") is True for event in workflow_request.events
+            ),
+            "scenario_id": workflow_request.events[0].attributes.get("scenario_id"),
             "detection_model": coordinator.detection.model_name,
             "detection_model_version": coordinator.detection.model_version,
             "agents": [

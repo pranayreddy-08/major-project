@@ -33,8 +33,34 @@ elevation; the standard installer intentionally runs without it.
    run, including status, duration, handoff digests, and the mandatory human gate.
 8. **Models & GNN** distinguishes the live deterministic detector from offline Logistic Regression
    and causal GraphSAGE evaluation, including architecture, metrics, dataset, and limitations.
-9. **Feedback** records a human verdict and bounded comment.
-10. **Audit log** is available to administrators.
+9. **Threat scenarios** provides seven safe presentation cases covering credential abuse, malware,
+   reconnaissance, lateral movement, exfiltration, suspicious administration, and normal activity.
+10. **Feedback** records a human verdict and bounded comment.
+11. **Audit log** is available to administrators.
+
+## Present the threat scenarios
+
+Open **Intelligence > Threat scenarios** and select **Run scenario**. Each case passes a synthetic,
+clearly labelled event chain through the same Detection, Correlation, Risk, Explainability, and
+Response agents used by normal analysis. The result panel compares the expected and actual class,
+shows confidence and risk, identifies the graph and response outputs, and explains the evidence.
+
+The scenarios cover all three detector outcomes:
+
+| Scenario | Expected class | Why |
+| --- | --- | --- |
+| Credential attack | Attack | Repeated authentication failures followed by a successful login |
+| Malware execution | Attack | Encoded PowerShell and a suspicious child process |
+| Network reconnaissance | Attack | One source probes many destination ports in a short interval |
+| Lateral movement | Attack | Remote service access and execution across internal hosts |
+| Data exfiltration | Attack | Sensitive-file access followed by an unusually large outbound transfer |
+| Suspicious tool activity | Suspicious | A dual-use administration tool runs without a confirmed attack chain |
+| Normal activity | Benign | Routine sign-in and application traffic without threat indicators |
+
+Scenario events and alerts are not written to the operational database. The result remains in the
+current browser session for presentation, while the audit log records that a simulation was run.
+The benign case intentionally creates no incident, attack graph, or response recommendation; this
+demonstrates that the platform does not force every input into a threat class.
 
 The platform never executes remediation automatically. Treat every detection as decision support:
 verify the evidence, consider false positives, and use established incident-response procedures.

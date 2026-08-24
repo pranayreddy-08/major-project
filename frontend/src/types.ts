@@ -154,6 +154,72 @@ export interface ModelCatalog {
   limitations: string[];
 }
 
+export type ThreatClassification = "attack" | "suspicious" | "benign";
+
+export interface ThreatScenario {
+  id: string;
+  title: string;
+  category: string;
+  technique: string;
+  description: string;
+  expected_classification: ThreatClassification;
+  severity: Severity;
+  event_count: number;
+  signals: string[];
+  learning_points: string[];
+}
+
+export interface ScenarioRunResult {
+  workflow: {
+    workflow_id: string;
+    status: "completed" | "partial_failure" | "failed";
+    detection: {
+      findings: Array<{
+        event_id: string;
+        classification: ThreatClassification;
+        confidence: number;
+        anomaly_score: number;
+        model_name: string;
+        model_version: string;
+      }>;
+    } | null;
+    correlation: {
+      incidents: Array<{ id: string; event_ids: string[] }>;
+      attack_graph: AttackGraph;
+    } | null;
+    risk: {
+      assessments: Array<{
+        event_id: string;
+        risk: { score: number; level: Severity; components: Record<string, number> };
+      }>;
+    } | null;
+    explainability: {
+      explanations: Array<{ event_id: string; summary: string; limitations: string }>;
+    } | null;
+    response: {
+      recommendations: Array<{
+        recommendation: Recommendation;
+        supporting_event_ids: string[];
+      }>;
+    } | null;
+    audit_trail: Array<{
+      sequence: number;
+      agent: string;
+      status: "completed" | "failed" | "skipped";
+      started_at: string;
+      completed_at: string;
+      detail: string;
+    }>;
+    human_approval: {
+      required: true;
+      approval_status: "pending";
+      execution_permitted: false;
+    };
+  };
+  stored_event_ids: string[];
+  stored_alert_ids: string[];
+}
+
 export interface Explanation {
   id: string;
   alert_id: string;

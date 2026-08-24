@@ -206,6 +206,19 @@ class ModelCatalog(BaseModel):
     limitations: list[str]
 
 
+class ThreatScenarioRead(BaseModel):
+    id: str
+    title: str
+    category: str
+    technique: str
+    description: str
+    expected_classification: Literal["attack", "suspicious", "benign"]
+    severity: Severity
+    event_count: int = Field(ge=1)
+    signals: list[str]
+    learning_points: list[str]
+
+
 class IncidentDetail(BaseModel):
     incident: IncidentSummary
     alerts: list[AlertSummary]

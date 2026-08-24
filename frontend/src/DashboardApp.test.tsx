@@ -18,6 +18,19 @@ const alert = {
   created_at: createdAt,
 };
 
+const scenario = {
+  id: "credential-attack",
+  title: "Credential attack",
+  category: "Credential access",
+  technique: "Repeated failure followed by credential attack",
+  description: "An external address repeatedly targets a privileged account.",
+  expected_classification: "attack",
+  severity: "critical",
+  event_count: 2,
+  signals: ["Authentication failure", "Credential attack"],
+  learning_points: ["Shared user/IP correlation"],
+};
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -90,6 +103,29 @@ function successfulApi() {
           { id: "graphsage", name: "Causal GraphSAGE", version: "phase7-evaluation-v1", kind: "graph_neural_network", deployment: "evaluated_offline", purpose: "Graph classification", architecture: "Two-layer causal mean aggregation", metrics: { precision: 1, recall: 0.6667, f1: 0.8, roc_auc: 0.7778, samples: 18 } },
         ],
         limitations: ["Synthetic test data only."],
+      });
+    }
+    if (url.endsWith("/platform/scenarios")) return jsonResponse([scenario]);
+    if (url.endsWith("/platform/scenarios/credential-attack/run")) {
+      return jsonResponse({
+        workflow: {
+          workflow_id: "workflow-scenario",
+          status: "completed",
+          detection: {
+            findings: [
+              { event_id: "sample-1", classification: "attack", confidence: 0.95, anomaly_score: 0.95, model_name: "severity-anomaly-baseline", model_version: "1.0.0" },
+              { event_id: "sample-2", classification: "attack", confidence: 1, anomaly_score: 1, model_name: "severity-anomaly-baseline", model_version: "1.0.0" },
+            ],
+          },
+          correlation: { incidents: [{ id: "incident-sample", event_ids: ["sample-1", "sample-2"] }], attack_graph: { nodes: [{ id: "node-1", entity_type: "host", key: "sample-host", label: "sample-host", risk_score: 90 }], edges: [] } },
+          risk: { assessments: [{ event_id: "sample-1", risk: { score: 91, level: "critical", components: {} } }] },
+          explainability: { explanations: [{ event_id: "sample-1", summary: "Classified as attack from severity and anomaly evidence.", limitations: "Simulation" }] },
+          response: { recommendations: [{ recommendation: { action: "reset_credentials", target: "sample-admin", priority: "critical", rationale: "Protect the account.", requires_human_approval: true, automatic_execution: false }, supporting_event_ids: ["sample-1"] }] },
+          audit_trail: ["detection", "correlation", "risk", "explainability", "response"].map((agent, index) => ({ sequence: index + 1, agent, status: "completed", started_at: createdAt, completed_at: createdAt, detail: "Structured handoff completed." })),
+          human_approval: { required: true, approval_status: "pending", execution_permitted: false },
+        },
+        stored_event_ids: [],
+        stored_alert_ids: [],
       });
     }
     if (url.endsWith("/sensors")) return jsonResponse([]);
@@ -172,6 +208,26 @@ describe("DashboardApp", () => {
     expect(screen.getByText("Causal GraphSAGE")).toBeInTheDocument();
     expect(screen.getByText("Evaluated offline")).toBeInTheDocument();
     expect(screen.getByText("Live now")).toBeInTheDocument();
+  });
+
+  it("runs a simulated threat scenario through all agents without persisting it", async () => {
+    vi.stubGlobal("fetch", successfulApi());
+    render(<DashboardApp />);
+
+    await screen.findByRole("heading", { name: "Welcome back" });
+    fireEvent.change(screen.getByLabelText("Username"), { target: { value: "owner" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "correct-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Enter workspace" }));
+    await screen.findByRole("heading", { name: "Security overview" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Threat scenarios" }));
+    expect(await screen.findByRole("heading", { name: "Threat scenarios" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Credential attack" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Run scenario" }));
+
+    expect(await screen.findByText(/Classification matched/)).toBeInTheDocument();
+    expect(screen.getByText("Safe simulation verified")).toBeInTheDocument();
+    expect(screen.getByText(/0 events stored/)).toBeInTheDocument();
   });
 
   it("shows a generic message when credentials are rejected", async () => {

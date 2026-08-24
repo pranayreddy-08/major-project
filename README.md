@@ -301,6 +301,13 @@ the live deterministic detector alongside the offline Logistic Regression and ca
 comparison. GraphSAGE is implemented and evaluated, but is not misrepresented as the live endpoint
 detector.
 
+**Threat scenarios** is a safe presentation lab with seven representative cases: credential attack,
+malware execution, network reconnaissance, lateral movement, data exfiltration, suspicious tool
+activity, and benign normal activity. Every case runs through the real five-agent analysis workflow
+and displays expected-versus-actual classification, confidence, risk, graph output, explanations,
+and response advice. Scenario events and alerts are never persisted, and remediation remains
+human-approved only. See `docs/user-guide.md` for the classification matrix and walkthrough.
+
 ## Development plan
 
 ### Phase 1 - Create and connect the GitHub repository

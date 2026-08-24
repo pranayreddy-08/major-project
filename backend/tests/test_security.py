@@ -135,6 +135,8 @@ def test_openapi_documents_phase6_platform_surface() -> None:
         "/api/v1/platform/analysis/run",
         "/api/v1/platform/workflows/recent",
         "/api/v1/platform/models",
+        "/api/v1/platform/scenarios",
+        "/api/v1/platform/scenarios/{scenario_id}/run",
         "/api/v1/platform/feedback",
         "/api/v1/platform/audit-logs",
     }

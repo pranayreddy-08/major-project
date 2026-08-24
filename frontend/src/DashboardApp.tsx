@@ -28,8 +28,11 @@ import type {
   Overview,
   Recommendation,
   RecommendationResult,
+  ScenarioRunResult,
   SensorServiceStatus,
   Severity,
+  ThreatClassification,
+  ThreatScenario,
   User,
   WorkflowRun,
 } from "./types";
@@ -43,6 +46,7 @@ type View =
   | "graph"
   | "workflow"
   | "models"
+  | "scenarios"
   | "explain"
   | "feedback"
   | "audit";
@@ -72,6 +76,7 @@ const navigationGroups: Array<{
   {
     label: "Intelligence",
     items: [
+      { id: "scenarios", label: "Threat scenarios", icon: "⚑" },
       { id: "workflow", label: "Agent workflow", icon: "⇢" },
       { id: "models", label: "Models & GNN", icon: "◇" },
       { id: "feedback", label: "Feedback", icon: "✓" },
@@ -375,6 +380,95 @@ function ExplainView({ alert, explanations, recommendations }: { alert: Alert | 
   );
 }
 
+const classificationRank: Record<ThreatClassification, number> = {
+  benign: 0,
+  suspicious: 1,
+  attack: 2,
+};
+
+function primaryClassification(result: ScenarioRunResult): ThreatClassification {
+  const classifications = result.workflow.detection?.findings.map((item) => item.classification) ?? [];
+  return classifications.reduce<ThreatClassification>(
+    (highest, current) => classificationRank[current] > classificationRank[highest] ? current : highest,
+    "benign",
+  );
+}
+
+function ThreatScenariosView({
+  scenarios,
+  results,
+  runningId,
+  onRun,
+}: {
+  scenarios: ThreatScenario[];
+  results: Record<string, ScenarioRunResult>;
+  runningId: string;
+  onRun: (scenario: ThreatScenario) => Promise<void>;
+}) {
+  const [selectedId, setSelectedId] = useState("");
+  const selectedScenario = scenarios.find((scenario) => scenario.id === selectedId);
+  const selectedResult = selectedScenario ? results[selectedScenario.id] : undefined;
+  const actual = selectedResult ? primaryClassification(selectedResult) : undefined;
+  const findings = selectedResult?.workflow.detection?.findings ?? [];
+  const risk = Math.max(0, ...(selectedResult?.workflow.risk?.assessments.map((item) => item.risk.score) ?? []));
+  const graph = selectedResult?.workflow.correlation?.attack_graph;
+  const recommendations = selectedResult?.workflow.response?.recommendations ?? [];
+
+  async function run(scenario: ThreatScenario) {
+    setSelectedId(scenario.id);
+    await onRun(scenario);
+  }
+
+  return (
+    <div className="view-stack">
+      <header className="view-heading">
+        <div><p className="section-kicker">Safe presentation lab</p><h1>Threat scenarios</h1><p>Run representative security chains through the real five-agent workflow. Samples are clearly simulated and are not stored as endpoint events or alerts.</p></div>
+        <span className="simulation-badge">Simulation · no persistence</span>
+      </header>
+      <section className="scenario-summary">
+        <div><strong>{scenarios.filter((item) => item.expected_classification === "attack").length}</strong><span>Attack scenarios</span></div>
+        <div><strong>{scenarios.filter((item) => item.expected_classification === "suspicious").length}</strong><span>Suspicious scenario</span></div>
+        <div><strong>{scenarios.filter((item) => item.expected_classification === "benign").length}</strong><span>Benign control</span></div>
+        <div><strong>5</strong><span>Agents per run</span></div>
+      </section>
+      <section className="scenario-grid">
+        {scenarios.map((scenario) => {
+          const result = results[scenario.id];
+          const resultClassification = result ? primaryClassification(result) : undefined;
+          const matches = resultClassification === scenario.expected_classification;
+          return (
+            <article className={`panel scenario-card scenario-${scenario.expected_classification}`} key={scenario.id}>
+              <div className="scenario-card-top"><span>{scenario.category}</span><span className={`classification classification-${scenario.expected_classification}`}>Expected: {scenario.expected_classification}</span></div>
+              <h2>{scenario.title}</h2><p>{scenario.description}</p>
+              <div className="scenario-technique"><strong>{scenario.technique}</strong><small>{scenario.event_count} correlated sample events</small></div>
+              <div className="signal-list">{scenario.signals.map((signal) => <span key={signal}>{signal}</span>)}</div>
+              {result && <div className={`scenario-verdict ${matches ? "matched" : "mismatch"}`}><strong>{matches ? "✓ Classification matched" : "Classification mismatch"}</strong><span>Actual: {resultClassification}</span></div>}
+              <button className="scenario-run-button" disabled={Boolean(runningId)} onClick={() => void run(scenario)}>{runningId === scenario.id ? "Running five agents…" : result ? "Run again" : "Run scenario"}</button>
+            </article>
+          );
+        })}
+      </section>
+      {selectedScenario && selectedResult && (
+        <section className="scenario-result">
+          <div className="scenario-result-heading"><div><p className="section-kicker">Actual workflow output</p><h2>{selectedScenario.title}</h2><p>{selectedResult.workflow.workflow_id}</p></div><div className={`result-classification classification-${actual}`}><span>Classified as</span><strong>{actual}</strong><small>{actual === selectedScenario.expected_classification ? "Matches expected outcome" : "Review required"}</small></div></div>
+          <div className="scenario-result-metrics">
+            <div><span>Peak confidence</span><strong>{(Math.max(0, ...findings.map((item) => item.confidence)) * 100).toFixed(0)}%</strong></div>
+            <div><span>Peak risk</span><strong>{risk.toFixed(0)}<small>/100</small></strong></div>
+            <div><span>Graph</span><strong>{graph?.nodes.length ?? 0}<small> nodes</small></strong></div>
+            <div><span>Response</span><strong>{recommendations.length}<small> suggestions</small></strong></div>
+          </div>
+          <div className="scenario-agent-strip">{selectedResult.workflow.audit_trail.map((step) => <div key={step.sequence}><span>{step.sequence}</span><strong>{titleCase(step.agent)}</strong><small>{titleCase(step.status)}</small></div>)}<div className="human-step"><span>6</span><strong>Human</strong><small>Approval pending</small></div></div>
+          <div className="scenario-output-grid">
+            <article><p className="section-kicker">Event classifications</p>{findings.map((finding, index) => <div className="finding-row" key={finding.event_id}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{titleCase(finding.classification)}</strong><small>{finding.model_name} · {(finding.confidence * 100).toFixed(0)}% confidence</small></div><span className={`classification classification-${finding.classification}`}>{finding.classification}</span></div>)}</article>
+            <article><p className="section-kicker">Analyst explanation</p>{selectedResult.workflow.explainability?.explanations.length ? selectedResult.workflow.explainability.explanations.map((item) => <p className="scenario-explanation" key={item.event_id}>{item.summary}</p>) : <p className="scenario-explanation">Both events were benign, so no alert explanation or response was created.</p>}<div className="learning-list">{selectedScenario.learning_points.map((point) => <span key={point}>✓ {point}</span>)}</div></article>
+          </div>
+          <div className="simulation-proof"><strong>Safe simulation verified</strong><span>{selectedResult.stored_event_ids.length} events stored · {selectedResult.stored_alert_ids.length} alerts stored · automatic execution disabled</span></div>
+        </section>
+      )}
+    </div>
+  );
+}
+
 const agentDescriptions = {
   detection: ["Detection", "Classifies each endpoint event and records contributing signals."],
   correlation: ["Correlation", "Groups related findings and constructs the attack graph."],
@@ -494,6 +588,9 @@ function Dashboard({ token, user, onLogout }: { token: string; user: User; onLog
   const [sensorService, setSensorService] = useState<SensorServiceStatus | null>(null);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
   const [modelCatalog, setModelCatalog] = useState<ModelCatalog | null>(null);
+  const [scenarios, setScenarios] = useState<ThreatScenario[]>([]);
+  const [scenarioResults, setScenarioResults] = useState<Record<string, ScenarioRunResult>>({});
+  const [runningScenarioId, setRunningScenarioId] = useState("");
   const [error, setError] = useState("");
 
   const handleError = useCallback((caught: unknown) => {
@@ -502,6 +599,23 @@ function Dashboard({ token, user, onLogout }: { token: string; user: User; onLog
   }, [onLogout]);
 
   const loadFeedback = useCallback(() => api<Feedback[]>("/platform/feedback", token).then(setFeedback).catch(handleError), [handleError, token]);
+  const runScenario = useCallback(async (scenario: ThreatScenario) => {
+    setRunningScenarioId(scenario.id);
+    setError("");
+    try {
+      const result = await api<ScenarioRunResult>(
+        `/platform/scenarios/${scenario.id}/run`,
+        token,
+        { method: "POST" },
+      );
+      setScenarioResults((current) => ({ ...current, [scenario.id]: result }));
+      api<WorkflowRun[]>("/platform/workflows/recent", token).then(setWorkflowRuns).catch(handleError);
+    } catch (caught) {
+      handleError(caught);
+    } finally {
+      setRunningScenarioId("");
+    }
+  }, [handleError, token]);
 
   useEffect(() => {
     Promise.all([
@@ -513,10 +627,12 @@ function Dashboard({ token, user, onLogout }: { token: string; user: User; onLog
       api<SensorServiceStatus>("/sensors/status", token),
       api<WorkflowRun[]>("/platform/workflows/recent", token),
       api<ModelCatalog>("/platform/models", token),
-    ]).then(([nextOverview, nextAlerts, nextIncidents, nextFeedback, nextSensors, nextSensorService, nextWorkflowRuns, nextModelCatalog]) => {
+      api<ThreatScenario[]>("/platform/scenarios", token),
+    ]).then(([nextOverview, nextAlerts, nextIncidents, nextFeedback, nextSensors, nextSensorService, nextWorkflowRuns, nextModelCatalog, nextScenarios]) => {
       setOverview(nextOverview); setAlerts(nextAlerts); setIncidents(nextIncidents); setFeedback(nextFeedback);
       setSensors(nextSensors); setSensorService(nextSensorService);
       setWorkflowRuns(nextWorkflowRuns); setModelCatalog(nextModelCatalog);
+      setScenarios(nextScenarios);
       setSelectedAlertId((current) => current || nextAlerts[0]?.id || "");
       setSelectedIncidentId((current) => current || nextIncidents[0]?.id || "");
     }).catch(handleError);
@@ -587,6 +703,7 @@ function Dashboard({ token, user, onLogout }: { token: string; user: User; onLog
           {view === "alerts" && <AlertsView alerts={alerts} selectedId={selectedAlertId} onSelect={openAlert} />}
           {view === "incident" && <IncidentView detail={incidentDetail} recommendations={recommendations} />}
           {view === "graph" && <div className="view-stack"><header className="view-heading"><div><p className="section-kicker">Entity relationships</p><h1>Attack graph</h1><p>{incidentDetail?.incident.title ?? "Select an incident"}</p></div>{incidentDetail && <div className="risk-orb small"><strong>{incidentDetail.incident.risk_score.toFixed(0)}</strong><span>risk</span></div>}</header><Suspense fallback={<LoadingState />}><AttackGraphView graph={incidentDetail?.graph ?? null} /></Suspense></div>}
+          {view === "scenarios" && <ThreatScenariosView scenarios={scenarios} results={scenarioResults} runningId={runningScenarioId} onRun={runScenario} />}
           {view === "workflow" && <WorkflowView runs={workflowRuns} />}
           {view === "models" && <ModelsView catalog={modelCatalog} />}
           {view === "explain" && <ExplainView alert={selectedAlert} explanations={explanations} recommendations={recommendations} />}
